@@ -1,5 +1,6 @@
 import React from "react";
 import Typography from "@mui/material/Typography";
+import Assessment from "./Assessment";
 
 const MasaMain: React.FC = () => {
   return (
@@ -14,6 +15,7 @@ const MasaMain: React.FC = () => {
         (≥178), mild dysphagia (168–177), moderate dysphagia (139–167), and
         severe dysphagia (≤138).
       </p>
+      <Assessment />
     </>
   );
 };
