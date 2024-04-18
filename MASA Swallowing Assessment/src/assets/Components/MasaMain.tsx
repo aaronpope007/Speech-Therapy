@@ -11,6 +11,7 @@ const MasaMain: React.FC = () => {
       <TitleAndDescription />
       <AssessmentCard />
       {/* clinical summary section will be used to auto generate text in a textfield that can be edited */}
+      {/* note patient's level of physical activity */}
       <ClinicalSummary />
     </Paper>
   );
