@@ -1,15 +1,43 @@
 import * as React from "react";
+import { useForm } from "react-hook-form";
 import Radio from "@mui/material/Radio";
 import RadioGroup from "@mui/material/RadioGroup";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import FormControl from "@mui/material/FormControl";
 import FormLabel from "@mui/material/FormLabel";
+import Button from "@mui/material/Button";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import Typography from "@mui/material/Typography";
 import assessmentAreas from "../AssessmentAreas"; // Assuming AssessmentAreas.tsx is in the same directory
 
 const AssessmentCard: React.FC = () => {
+  const { register, watch } = useForm();
+
+  // Watch for changes in the form values
+  const formValues = watch();
+
+  // Log the selected value of the radio buttons
+  const handleRadioChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    console.log(event.target.value);
+  };
+
+  // Log form values whenever they change
+  React.useEffect(() => {
+    console.log(formValues);
+  }, [formValues]);
+
+  // Function to calculate the total value of selected radio buttons
+  const calculateTotal = () => {
+    let total = 0;
+    Object.keys(formValues.grades).forEach((key) => {
+      if (formValues.grades[key]) {
+        total += parseInt(key);
+      }
+    });
+    console.log("Total value:", total);
+  };
+
   return (
     <div>
       {assessmentAreas.map((area, index) => (
@@ -32,7 +60,11 @@ const AssessmentCard: React.FC = () => {
 
             <FormLabel component="legend">Scores</FormLabel>
             <FormControl required component="fieldset">
-              <RadioGroup aria-label="grades" name="grades">
+              <RadioGroup
+                aria-label="grades"
+                name="grades"
+                onChange={handleRadioChange} // Add onChange event handler to capture selected value
+              >
                 {Object.keys(area.grades)
                   .reverse()
                   .map((gradeKey) => (
@@ -41,8 +73,12 @@ const AssessmentCard: React.FC = () => {
                       value={gradeKey}
                       control={<Radio />}
                       label={`${gradeKey}: ${
-                        area.grades[gradeKey as keyof typeof area.grades]?.text
+                        area.grades[
+                          gradeKey as unknown as keyof typeof area.grades
+                        ]?.text
                       }`}
+                      // Register each radio button with useForm
+                      {...register(`grades.${gradeKey}`)}
                     />
                   ))}
               </RadioGroup>
@@ -50,6 +86,9 @@ const AssessmentCard: React.FC = () => {
           </CardContent>
         </Card>
       ))}
+      <Button variant="contained" onClick={calculateTotal}>
+        Calculate Total
+      </Button>
     </div>
   );
 };
