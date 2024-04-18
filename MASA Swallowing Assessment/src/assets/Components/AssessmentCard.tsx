@@ -10,6 +10,7 @@ import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import Typography from "@mui/material/Typography";
 import assessmentAreas from "../AssessmentAreas"; // Assuming AssessmentAreas.tsx is in the same directory
+import { Accordion, AccordionDetails, AccordionSummary } from "@mui/material";
 
 const AssessmentCard: React.FC = () => {
   const { register, watch } = useForm();
@@ -41,15 +42,17 @@ const AssessmentCard: React.FC = () => {
   return (
     <div>
       {assessmentAreas.map((area, index) => (
-        <Card
-          key={index}
-          elevation={10}
-          sx={{ minWidth: 275, margin: 4, padding: 3 }}
-        >
-          <CardContent>
-            <Typography variant="h2" color="text.secondary" gutterBottom>
-              {area.title}
-            </Typography>
+        <Accordion sx={{ minWidth: 275, margin: 4, padding: 3 }}>
+          <AccordionSummary aria-controls="panel1-content" id="panel1-header">
+            <Typography>{area.title}</Typography>
+          </AccordionSummary>
+
+          <AccordionDetails>
+            <Typography
+              variant="h2"
+              color="text.secondary"
+              gutterBottom
+            ></Typography>
 
             <Typography variant="h5" sx={{ mb: 5 }} color="text.secondary">
               {area.description}
@@ -83,8 +86,8 @@ const AssessmentCard: React.FC = () => {
                   ))}
               </RadioGroup>
             </FormControl>
-          </CardContent>
-        </Card>
+          </AccordionDetails>
+        </Accordion>
       ))}
       <Button variant="contained" onClick={calculateTotal}>
         Calculate Total

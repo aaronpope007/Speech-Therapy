@@ -161,28 +161,187 @@ const assessmentAreas = [
   {
     title: `Saliva`,
     description: `Ability to manage oral secretions`,
-    task: `Observe the patient's control of saliva. Note any`,
+    task: `Observe the patient's control of saliva. Note any escape of secretions from the side of mouth and check corners of mouth for wetness. Ask the patient if he or she has noticed undue saliva loss during the day, at night, or while side lying.`,
     grades: {
-      10: {
-        value: 10,
-        text: ``,
-      },
-      8: {
-        value: 8,
-        text: ``,
-      },
-      6: {
-        value: 6,
-        text: ``,
+      5: {
+        value: 5,
+        text: `No abnormality detected on screening`,
       },
       4: {
         value: 4,
-        text: ``,
+        text: `Frothy/expectorated into cup`,
+      },
+      3: {
+        value: 3,
+        text: `Drooling at times, during speech while side lying, when fatigued`,
+      },
+      2: {
+        value: 2,
+        text: `Some drool consistently`,
+      },
+      1: {
+        value: 1,
+        text: `Gross drooling. Unable to control drooling, open mouth posture, needing bib protection`,
       },
     },
   },
   {
-    title: ``,
+    title: `Lip Seal`,
+    description: `Ability to control labial movement and closure`,
+    task: ``,
+    grades: {
+      5: {
+        value: 5,
+        text: `No abnormality detected on screening`,
+      },
+      4: {
+        value: 4,
+        text: `Mild impairment, occasional leakage`,
+      },
+      3: {
+        value: 3,
+        text: `Unilaterally weak, poor mainenance, restricted movement`,
+      },
+      2: {
+        value: 2,
+        text: `Incomplete closure, limited movement`,
+      },
+      1: {
+        value: 1,
+        text: `No closure, unable to assess`,
+      },
+    },
+  },
+  {
+    title: `Tongue Movement`,
+    description: `Lingual mobility in both anterior and posterior aspects`,
+    // TODO, figure out how to italicize Anterior Aspect and Posterior Aspect
+    task: `Anterior Aspect - Protrusion: Have patient extend tongue as far forward as possible and then retract similarly.  Lateralization: Have patient touch each corner of the mouth, then repeat alternating lateral movements. With tongue, have patient attempt to clear out lateral sulci on each side of the mouth. Elevation: With mouth wide open, have patient raise tongue tip to alveolar ridge. Alternate elevation and depression in this way. Posterior Aspect - Elevation: Have patient raise back of tongue to meet palate and hold the position.`,
+    grades: {
+      10: {
+        value: 10,
+        text: `Full range of movement/no abnormality detected`,
+      },
+      8: {
+        value: 8,
+        text: `Mild impairment in range`,
+      },
+      6: {
+        value: 6,
+        text: `Incomplete movement`,
+      },
+      4: {
+        value: 4,
+        text: `Minimal movement`,
+      },
+      2: {
+        value: 2,
+        text: `No movement`,
+      },
+    },
+  },
+  {
+    title: `Tongue Strength`,
+    description: `Bilateral lingual strength on resistance tasks`,
+    task: `Have patient push laterally, against a tongue depressor or gloved finger. Have patient push anteriorly against a tongue depressor or gloved finger. Have patient push during eleveation and depression of tongue. Ask patient to elevate back of tongue against a tongue depressor or gloved finger. Note tone and strength to resistance.`,
+    grades: {
+      10: {
+        value: 10,
+        text: `No abnormality detected on screening`,
+      },
+      8: {
+        value: 8,
+        text: `Minimal weakness`,
+      },
+      5: {
+        value: 5,
+        text: `Obvious unilateral weakness`,
+      },
+      2: {
+        value: 2,
+        text: `Gross weakness`,
+      },
+    },
+  },
+  {
+    title: `Tongue Coordination`,
+    description: `Ability to control lingual movement during serial repetitious activity or speech`,
+    task: `Ask patient to lick around lips, slowly and then rapidly, touching all parts. Have patient rapidly repeat tongue tip alveolar syllables /ta/. Repeat a sentence including tongue tip alveolar consonants (e.g., Take Tim to tea). Ask patient to rapidly repeat velar syllables /ka/. Repeat a sentence including velar consonants (e.g., Can you keep Katie clean?).`,
+    grades: {
+      10: {
+        value: 10,
+        text: `No abnormality detected on screening`,
+      },
+      8: {
+        value: 8,
+        text: `Mild incoordination`,
+      },
+      5: {
+        value: 5,
+        text: `Gross incoordination`,
+      },
+      2: {
+        value: 2,
+        text: `No movement/unable to assess`,
+      },
+    },
+  },
+  {
+    title: `Oral Preparation`,
+    description: `Ability to break down food, mix with saliva, and form a cohesive bolus ready to swallow`,
+    task: `Observe patient while eating or chewing. Ask to observe how bolus is prepared prior to swallowing. Check for loss from mouth, position of food bolus, spread throughout oral cavity, and loss of material into lateral or anterior sulci. Note chewing movements and fatigue.`,
+    grades: {
+      10: {
+        value: 10,
+        text: `No abnormality detected on screening`,
+      },
+      8: {
+        value: 8,
+        text: `Lip or tongue seal, bolus escape`,
+      },
+      6: {
+        value: 6,
+        text: `Minimal chew/tongue thrust bolus projected forward/limited preparation gravityassisted/spread throughout mouth/compensatory head extension`,
+      },
+      4: {
+        value: 4,
+        text: `No bolus formation / no attempt`,
+      },
+      2: {
+        value: 2,
+        text: `Unable to assess`,
+      },
+    },
+  },
+  {
+    title: `Gag`,
+    description: `Reflex motor response triggered in response to noxious stimuli. It measures response of surface tactile receptors and afferent information travels by way of CN X (and possibly some portion of IX).`,
+    task: `Using a laryngeal mirror (size 00) (introduction of cold is optional), contact the base of the tongue or posterior pharyngeal wall. Note any contraction of the pharyngeal wall or soft palate.`,
+    grades: {
+      5: {
+        value: 5,
+        text: `No abnormality detected, strong symmetrical response / hyperreflexive`,
+      },
+      4: {
+        value: 4,
+        text: `Diminished bilaterally`,
+      },
+      3: {
+        value: 3,
+        text: `Diminished unilaterally`,
+      },
+      2: {
+        value: 2,
+        text: `Absent unilaterally`,
+      },
+      1: {
+        value: 1,
+        text: `No gag response noted`,
+      },
+    },
+  },
+  {
+    title: `Palate`,
     description: ``,
     task: ``,
     grades: {
@@ -202,10 +361,14 @@ const assessmentAreas = [
         value: 4,
         text: ``,
       },
+      2: {
+        value: 2,
+        text: ``,
+      },
     },
   },
   {
-    title: ``,
+    title: `Bolus Clearance`,
     description: ``,
     task: ``,
     grades: {
@@ -225,10 +388,14 @@ const assessmentAreas = [
         value: 4,
         text: ``,
       },
+      2: {
+        value: 2,
+        text: ``,
+      },
     },
   },
   {
-    title: ``,
+    title: `Oral Transit`,
     description: ``,
     task: ``,
     grades: {
@@ -248,10 +415,14 @@ const assessmentAreas = [
         value: 4,
         text: ``,
       },
+      2: {
+        value: 2,
+        text: ``,
+      },
     },
   },
   {
-    title: ``,
+    title: `Cough Reflex`,
     description: ``,
     task: ``,
     grades: {
@@ -271,10 +442,14 @@ const assessmentAreas = [
         value: 4,
         text: ``,
       },
+      2: {
+        value: 2,
+        text: ``,
+      },
     },
   },
   {
-    title: ``,
+    title: `Voluntary Cough`,
     description: ``,
     task: ``,
     grades: {
@@ -292,6 +467,118 @@ const assessmentAreas = [
       },
       4: {
         value: 4,
+        text: ``,
+      },
+      2: {
+        value: 2,
+        text: ``,
+      },
+    },
+  },
+  {
+    title: `Voice`,
+    description: ``,
+    task: ``,
+    grades: {
+      10: {
+        value: 10,
+        text: ``,
+      },
+      8: {
+        value: 8,
+        text: ``,
+      },
+      6: {
+        value: 6,
+        text: ``,
+      },
+      4: {
+        value: 4,
+        text: ``,
+      },
+      2: {
+        value: 2,
+        text: ``,
+      },
+    },
+  },
+  {
+    title: `Trache`,
+    description: ``,
+    task: ``,
+    grades: {
+      10: {
+        value: 10,
+        text: ``,
+      },
+      8: {
+        value: 8,
+        text: ``,
+      },
+      6: {
+        value: 6,
+        text: ``,
+      },
+      4: {
+        value: 4,
+        text: ``,
+      },
+      2: {
+        value: 2,
+        text: ``,
+      },
+    },
+  },
+  {
+    title: `Pharyngeal Phase`,
+    description: ``,
+    task: ``,
+    grades: {
+      10: {
+        value: 10,
+        text: ``,
+      },
+      8: {
+        value: 8,
+        text: ``,
+      },
+      6: {
+        value: 6,
+        text: ``,
+      },
+      4: {
+        value: 4,
+        text: ``,
+      },
+      2: {
+        value: 2,
+        text: ``,
+      },
+    },
+  },
+  {
+    title: `Pharyngeal Response`,
+    description: ``,
+    task: ``,
+    grades: {
+      10: {
+        value: 10,
+        text: ``,
+      },
+      8: {
+        value: 8,
+        text: ``,
+      },
+      6: {
+        value: 6,
+        text: ``,
+      },
+      4: {
+        value: 4,
+        text: ``,
+      },
+      2: {
+        value: 2,
         text: ``,
       },
     },
