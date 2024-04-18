@@ -111,53 +111,57 @@ const assessmentAreas = [
     grades: {
       5: {
         value: 5,
-        text: ``,
+        text: `No abnormality detected on screening`,
       },
       4: {
         value: 4,
-        text: ``,
+        text: `Mild difficulty finding words/expressing ideas`,
       },
       3: {
         value: 3,
-        text: ``,
+        text: `Expresses self in a limited manner/short phrases or words`,
       },
       2: {
         value: 2,
-        text: ``,
+        text: `No functional speech - sounds or undecipherable single words`,
       },
       1: {
         value: 1,
-        text: ``,
+        text: `Unable to assess`,
       },
     },
   },
   {
-    title: ``,
-    description: ``,
-    task: ``,
+    title: `Dyspraxia`,
+    description: `Impairment in the capacity to order the positioning of the speech musculature or sequence the movements for volitional production of speech. Not accompanied by weakness, slowness, or incoordination of these muscles in reflex or automatic acts.`,
+    task: `Informally assess as above. Include repetition of phrases of increasing syllabic length and performance of a range of oral movement to command. Record accuracy, agility, and spontaneous versus imitative productions.`,
     grades: {
-      10: {
-        value: 10,
-        text: ``,
-      },
-      8: {
-        value: 8,
-        text: ``,
-      },
-      6: {
-        value: 6,
-        text: ``,
+      5: {
+        value: 5,
+        text: `No abnormality detected on screening`,
       },
       4: {
         value: 4,
-        text: ``,
+        text: `Speech accurate after trial and error, minor searching movements`,
+      },
+      3: {
+        value: 3,
+        text: `Speech crude/defective in accuracy or speed on command`,
+      },
+      2: {
+        value: 2,
+        text: `Significant groping/iaccuracy, partial or irrelevant responses`,
+      },
+      1: {
+        value: 1,
+        text: `Unable to assess`,
       },
     },
   },
   {
-    title: ``,
-    description: ``,
-    task: ``,
+    title: `Saliva`,
+    description: `Ability to manage oral secretions`,
+    task: `Observe the patient's control of saliva. Note any`,
     grades: {
       10: {
         value: 10,
