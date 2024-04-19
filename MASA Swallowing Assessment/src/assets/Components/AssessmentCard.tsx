@@ -6,11 +6,10 @@ import FormControlLabel from "@mui/material/FormControlLabel";
 import FormControl from "@mui/material/FormControl";
 import FormLabel from "@mui/material/FormLabel";
 import Button from "@mui/material/Button";
-import Card from "@mui/material/Card";
-import CardContent from "@mui/material/CardContent";
 import Typography from "@mui/material/Typography";
 import assessmentAreas from "../AssessmentAreas"; // Assuming AssessmentAreas.tsx is in the same directory
 import { Accordion, AccordionDetails, AccordionSummary } from "@mui/material";
+import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 
 const AssessmentCard: React.FC = () => {
   const { register, watch } = useForm();
@@ -43,8 +42,12 @@ const AssessmentCard: React.FC = () => {
     <div>
       {assessmentAreas.map((area, index) => (
         <Accordion sx={{ minWidth: 275, margin: 4, padding: 3 }}>
-          <AccordionSummary aria-controls="panel1-content" id="panel1-header">
-            <Typography>{area.title}</Typography>
+          <AccordionSummary
+            aria-controls="panel1-content"
+            id="panel1-header"
+            expandIcon={<ArrowDownwardIcon />}
+          >
+            <Typography variant="h4">{area.title}</Typography>
           </AccordionSummary>
 
           <AccordionDetails>
@@ -55,7 +58,7 @@ const AssessmentCard: React.FC = () => {
             ></Typography>
 
             <Typography variant="h5" sx={{ mb: 5 }} color="text.secondary">
-              {area.description}
+              Description: {area.description}
             </Typography>
             <Typography variant="h5" sx={{ mb: 5 }} color="text.secondary">
               Task: {area.task}
