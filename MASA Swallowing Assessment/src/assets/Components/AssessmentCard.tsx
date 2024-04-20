@@ -8,7 +8,13 @@ import FormLabel from "@mui/material/FormLabel";
 import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
 import assessmentAreas from "../AssessmentAreas"; // Assuming AssessmentAreas.tsx is in the same directory
-import { Accordion, AccordionDetails, AccordionSummary } from "@mui/material";
+import {
+  Accordion,
+  AccordionDetails,
+  AccordionSummary,
+  ButtonGroup,
+  Stack,
+} from "@mui/material";
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 
 const AssessmentCard: React.FC = () => {
@@ -40,7 +46,7 @@ const AssessmentCard: React.FC = () => {
 
   return (
     <div>
-      {assessmentAreas.map((area, index) => (
+      {assessmentAreas.map((area) => (
         <Accordion sx={{ minWidth: 275, margin: 4, padding: 3 }}>
           <AccordionSummary
             aria-controls="panel1-content"
@@ -48,6 +54,27 @@ const AssessmentCard: React.FC = () => {
             expandIcon={<ArrowDownwardIcon />}
           >
             <Typography variant="h4">{area.title}</Typography>
+
+            <Stack direction="row" spacing={1} sx={{ marginLeft: "3rem" }}>
+              {Object.values(area.grades)
+                .reverse()
+                .map((grade) => (
+                  <div key={grade.value}>
+                    {grade.shortText && (
+                      <ButtonGroup size="small">
+                        <Button
+                          variant="outlined"
+                          color="primary"
+                          sx={{ marginTop: "0.3rem" }}
+                          onClick={(e) => e?.stopPropagation()}
+                        >
+                          {grade.shortText}
+                        </Button>
+                      </ButtonGroup>
+                    )}
+                  </div>
+                ))}
+            </Stack>
           </AccordionSummary>
 
           <AccordionDetails>

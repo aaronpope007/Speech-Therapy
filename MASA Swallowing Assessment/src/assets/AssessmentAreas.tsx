@@ -5,10 +5,22 @@ const assessmentAreas = [
       "A general lack of awareness to environment and self, insensitivity to stimuli, difficulty following thought or attention",
     task: `Observe and evaluate patient's response to speech, movement, or pain. May incorporate information from medical or nursing staff`,
     grades: {
-      10: { value: 10, text: "Alert" },
-      8: { value: 8, text: "Drowsy - fluctuating awareness/alert level" },
-      5: { value: 5, text: "Difficult to rouse by speech or movement" },
-      2: { value: 2, text: "No response to speech or movement" },
+      10: { value: 10, text: "Alert", shortText: "Alert" },
+      8: {
+        value: 8,
+        text: "Drowsy - fluctuating awareness/alert level",
+        shortText: "Fluctuates",
+      },
+      5: {
+        value: 5,
+        text: "Difficult to rouse by speech or movement",
+        shortText: "Difficult to rouse",
+      },
+      2: {
+        value: 2,
+        text: "No response to speech or movement",
+        shortText: "No response to speech",
+      },
     },
   },
   {
@@ -19,15 +31,19 @@ const assessmentAreas = [
       10: {
         value: 10,
         text: `Cooperative - engages in some form of exchange (verbal/nonverbal).`,
+        shortText: "aa",
       },
       8: {
         value: 8,
         text: `Fluctuating cooperation - distracted by multiple simultaneous stimuli.`,
+        shortText: "bb",
       },
       5: { value: 5, text: `Reluctant - unwilling to permit interaction.` },
+      shortText: "cc",
       2: {
         value: 2,
         text: `Unable to cooperate with interaction or activity.`,
+        shortText: "dd",
       },
     },
   },
