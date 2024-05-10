@@ -7,7 +7,7 @@ const ClinicalSummary: React.FC = () => {
         This is the clinical summary holder
       </Typography>
       <Typography fontSize="24px" marginTop={"2rem"} marginBottom={"3rem"}>
-        This will be a text field populated and editable with clinical results
+        This will be a text field populated and editable with clinical results.
       </Typography>
     </>
   );
