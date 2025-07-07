@@ -43,6 +43,8 @@ interface AssessmentCardProps {
   setSelectedGrades: React.Dispatch<React.SetStateAction<{ [key: number]: number | null }>>;
   patientInfo: PatientInfo;
   setPatientInfo: React.Dispatch<React.SetStateAction<PatientInfo>>;
+  notes: string;
+  setNotes: React.Dispatch<React.SetStateAction<string>>;
 }
 
 const AssessmentCard: React.FC<AssessmentCardProps> = ({
@@ -50,24 +52,10 @@ const AssessmentCard: React.FC<AssessmentCardProps> = ({
   setSelectedGrades,
   patientInfo,
   setPatientInfo,
+  notes,
+  setNotes,
 }) => {
-  const [notes, setNotes] = React.useState<string>("");
   const [saveMessage, setSaveMessage] = React.useState<string>("");
-
-  // Load data from localStorage on component mount
-  React.useEffect(() => {
-    const savedData = localStorage.getItem('masa-assessment');
-    if (savedData) {
-      try {
-        const parsedData: AssessmentData = JSON.parse(savedData);
-        setPatientInfo(parsedData.patientInfo);
-        setSelectedGrades(parsedData.selectedGrades);
-        setNotes(parsedData.notes || "");
-      } catch (error) {
-        console.error('Error loading saved data:', error);
-      }
-    }
-  }, []);
 
   // Handle selection from button or radio
   const handleSelect = (areaIdx: number, gradeValue: number) => {
@@ -105,6 +93,7 @@ const AssessmentCard: React.FC<AssessmentCardProps> = ({
 
   // Save assessment to localStorage
   const saveAssessment = () => {
+    const assessmentId = `masa-assessment-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     const assessmentData: AssessmentData = {
       patientInfo,
       selectedGrades,
@@ -112,14 +101,14 @@ const AssessmentCard: React.FC<AssessmentCardProps> = ({
       savedDate: new Date().toISOString(),
     };
     
-    localStorage.setItem('masa-assessment', JSON.stringify(assessmentData));
+    localStorage.setItem(assessmentId, JSON.stringify(assessmentData));
     setSaveMessage("Assessment saved successfully!");
     setTimeout(() => setSaveMessage(""), 3000);
   };
 
-  // Clear assessment
+  // Clear assessment (start new)
   const clearAssessment = () => {
-    if (window.confirm("Are you sure you want to clear all data? This cannot be undone.")) {
+    if (window.confirm("Are you sure you want to start a new assessment? All current data will be cleared.")) {
       setSelectedGrades({});
       setPatientInfo({
         name: "",
@@ -128,8 +117,7 @@ const AssessmentCard: React.FC<AssessmentCardProps> = ({
         clinician: "",
       });
       setNotes("");
-      localStorage.removeItem('masa-assessment');
-      setSaveMessage("Assessment cleared!");
+      setSaveMessage("New assessment started!");
       setTimeout(() => setSaveMessage(""), 3000);
     }
   };
@@ -234,7 +222,7 @@ const AssessmentCard: React.FC<AssessmentCardProps> = ({
           <Grid item xs={12} sm={4}>
             <Chip
               label={interpretation.severity}
-              color={interpretation.color as any}
+              color={interpretation.color as "success" | "warning" | "error"}
               size="medium"
               sx={{ fontSize: '1rem', py: 2 }}
             />
@@ -242,7 +230,7 @@ const AssessmentCard: React.FC<AssessmentCardProps> = ({
           <Grid item xs={12} sm={5}>
             <Chip
               label={aspirationRisk.severity}
-              color={aspirationRisk.color as any}
+              color={aspirationRisk.color as "success" | "warning" | "error"}
               variant="outlined"
               size="medium"
               sx={{ fontSize: '1rem', py: 2 }}
