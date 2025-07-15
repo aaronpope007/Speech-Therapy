@@ -14,6 +14,7 @@ import {
   InputLabel,
   Select,
   MenuItem,
+  SelectChangeEvent,
 } from '@mui/material';
 import { signUp } from '../../firebase/auth';
 
@@ -41,6 +42,13 @@ const SignUpForm: React.FC<SignUpFormProps> = ({ onSwitchToLogin, onSignUpSucces
     setFormData(prev => ({
       ...prev,
       [field]: e.target.value
+    }));
+  };
+
+  const handleSelectChange = (e: SelectChangeEvent<'clinician' | 'admin'>) => {
+    setFormData(prev => ({
+      ...prev,
+      role: e.target.value as 'clinician' | 'admin'
     }));
   };
 
@@ -149,7 +157,7 @@ const SignUpForm: React.FC<SignUpFormProps> = ({ onSwitchToLogin, onSignUpSucces
             <Select
               value={formData.role}
               label="Role"
-              onChange={handleChange('role')}
+              onChange={handleSelectChange}
             >
               <MenuItem value="clinician">Clinician</MenuItem>
               <MenuItem value="admin">Administrator</MenuItem>

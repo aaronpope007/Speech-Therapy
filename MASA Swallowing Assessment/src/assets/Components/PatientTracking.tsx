@@ -21,21 +21,9 @@ import {
   Assessment as AssessmentIcon,
   Download as DownloadIcon,
 } from "@mui/icons-material";
+import { AssessmentData } from "../../types/Patient";
 
-interface PatientInfo {
-  name: string;
-  dateOfBirth: string;
-  assessmentDate: string;
-  clinician: string;
-}
 
-interface AssessmentData {
-  patientInfo: PatientInfo;
-  selectedGrades: { [key: number]: number | null };
-  notes: string;
-  savedDate: string;
-  id: string;
-}
 
 interface PatientTrackingProps {
   onLoadAssessment: (assessment: AssessmentData) => void;
