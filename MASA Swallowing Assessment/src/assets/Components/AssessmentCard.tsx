@@ -24,19 +24,18 @@ import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 import SaveIcon from "@mui/icons-material/Save";
 import DeleteIcon from "@mui/icons-material/Delete";
 
+import { Patient } from "../../types/Patient";
+import { PatientService } from "../../services/PatientService";
+
 interface PatientInfo {
   name: string;
   dateOfBirth: string;
+  mrn: string;
   assessmentDate: string;
   clinician: string;
 }
 
-interface AssessmentData {
-  patientInfo: PatientInfo;
-  selectedGrades: { [key: number]: number | null };
-  notes: string;
-  savedDate: string;
-}
+
 
 interface AssessmentCardProps {
   selectedGrades: { [key: number]: number | null };
@@ -45,13 +44,17 @@ interface AssessmentCardProps {
   setPatientInfo: React.Dispatch<React.SetStateAction<PatientInfo>>;
   notes: string;
   setNotes: React.Dispatch<React.SetStateAction<string>>;
+  selectedPatient?: Patient;
+  onPatientSelect?: () => void;
 }
 
 // Memoized Patient Information Section
 const PatientInfoSection = React.memo<{
   patientInfo: PatientInfo;
   setPatientInfo: React.Dispatch<React.SetStateAction<PatientInfo>>;
-}>(({ patientInfo, setPatientInfo }) => {
+  selectedPatient?: Patient;
+  onPatientSelect?: () => void;
+}>(({ patientInfo, setPatientInfo, selectedPatient, onPatientSelect }) => {
   const handlePatientInfoChange = React.useCallback((field: keyof PatientInfo) => (
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
@@ -63,6 +66,18 @@ const PatientInfoSection = React.memo<{
       <Typography variant="h5" gutterBottom>
         Patient Information
       </Typography>
+      
+      {selectedPatient && (
+        <Box sx={{ mb: 2, p: 2, bgcolor: 'primary.light', borderRadius: 1, color: 'white' }}>
+          <Typography variant="subtitle1" gutterBottom>
+            Selected Patient: {selectedPatient.name}
+          </Typography>
+          <Typography variant="body2">
+            MRN: {selectedPatient.mrn} | DOB: {new Date(selectedPatient.dateOfBirth).toLocaleDateString()}
+          </Typography>
+        </Box>
+      )}
+      
       <Grid container spacing={2}>
         <Grid item xs={12} sm={6}>
           <TextField
@@ -72,6 +87,7 @@ const PatientInfoSection = React.memo<{
             onChange={handlePatientInfoChange('name')}
             variant="outlined"
             size="small"
+            disabled={!!selectedPatient}
           />
         </Grid>
         <Grid item xs={12} sm={6}>
@@ -84,6 +100,18 @@ const PatientInfoSection = React.memo<{
             variant="outlined"
             size="small"
             InputLabelProps={{ shrink: true }}
+            disabled={!!selectedPatient}
+          />
+        </Grid>
+        <Grid item xs={12} sm={6}>
+          <TextField
+            fullWidth
+            label="Medical Record Number (MRN)"
+            value={patientInfo.mrn}
+            onChange={handlePatientInfoChange('mrn')}
+            variant="outlined"
+            size="small"
+            disabled={!!selectedPatient}
           />
         </Grid>
         <Grid item xs={12} sm={6}>
@@ -108,6 +136,17 @@ const PatientInfoSection = React.memo<{
             size="small"
           />
         </Grid>
+        {!selectedPatient && (
+          <Grid item xs={12} sm={6}>
+            <Button
+              variant="outlined"
+              onClick={onPatientSelect}
+              sx={{ height: '100%', minHeight: 56 }}
+            >
+              Select Existing Patient
+            </Button>
+          </Grid>
+        )}
       </Grid>
     </Paper>
   );
@@ -297,6 +336,8 @@ const AssessmentCard: React.FC<AssessmentCardProps> = ({
   setPatientInfo,
   notes,
   setNotes,
+  selectedPatient,
+  onPatientSelect,
 }) => {
   const [saveMessage, setSaveMessage] = React.useState<string>("");
 
@@ -305,6 +346,26 @@ const AssessmentCard: React.FC<AssessmentCardProps> = ({
     Object.values(selectedGrades).reduce((acc: number, val) => acc + (typeof val === 'number' ? val : 0), 0),
     [selectedGrades]
   );
+
+  // Check if all assessment areas are completed
+  const isAssessmentComplete = React.useMemo(() => {
+    const totalAreas = 24; // Total MASA assessment areas
+    const completedAreas = Object.values(selectedGrades).filter(val => val !== null).length;
+    return completedAreas === totalAreas;
+  }, [selectedGrades]);
+
+  // Check if patient info is complete
+  const isPatientInfoComplete = React.useMemo(() => {
+    return patientInfo.name.trim() !== '' && 
+           patientInfo.dateOfBirth !== '' && 
+           patientInfo.assessmentDate !== '' && 
+           patientInfo.clinician.trim() !== '';
+  }, [patientInfo]);
+
+  // Check if save is allowed
+  const canSave = React.useMemo(() => {
+    return isAssessmentComplete && isPatientInfoComplete;
+  }, [isAssessmentComplete, isPatientInfoComplete]);
 
   const interpretation = React.useMemo(() => {
     if (totalScore >= 178) {
@@ -336,18 +397,18 @@ const AssessmentCard: React.FC<AssessmentCardProps> = ({
   }, [setSelectedGrades]);
 
   const saveAssessment = React.useCallback(() => {
-    const assessmentId = `masa-assessment-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-    const assessmentData: AssessmentData = {
+    const assessmentData = {
+      patientId: selectedPatient?.id || '',
       patientInfo,
       selectedGrades,
       notes,
       savedDate: new Date().toISOString(),
     };
     
-    localStorage.setItem(assessmentId, JSON.stringify(assessmentData));
+    PatientService.createAssessment(assessmentData);
     setSaveMessage("Assessment saved successfully!");
     setTimeout(() => setSaveMessage(""), 3000);
-  }, [patientInfo, selectedGrades, notes]);
+  }, [patientInfo, selectedGrades, notes, selectedPatient]);
 
   const clearAssessment = React.useCallback(() => {
     if (window.confirm("Are you sure you want to start a new assessment? All current data will be cleared.")) {
@@ -355,6 +416,7 @@ const AssessmentCard: React.FC<AssessmentCardProps> = ({
       setPatientInfo({
         name: "",
         dateOfBirth: "",
+        mrn: "",
         assessmentDate: new Date().toISOString().split('T')[0],
         clinician: "",
       });
@@ -372,16 +434,41 @@ const AssessmentCard: React.FC<AssessmentCardProps> = ({
     <div>
       <PatientInfoSection 
         patientInfo={patientInfo} 
-        setPatientInfo={setPatientInfo} 
+        setPatientInfo={setPatientInfo}
+        selectedPatient={selectedPatient}
+        onPatientSelect={onPatientSelect}
       />
 
       {/* Save/Load Controls */}
-      <Box sx={{ mb: 3, display: 'flex', gap: 2, alignItems: 'center' }}>
+      <Box 
+        sx={{ 
+          mb: 3, 
+          display: 'flex', 
+          gap: 2, 
+          alignItems: 'center', 
+          flexWrap: 'wrap',
+          position: 'sticky',
+          top: 80, // Position below the progress bar
+          zIndex: 999,
+          bgcolor: 'background.paper',
+          py: 2,
+          borderBottom: '1px solid',
+          borderColor: 'divider',
+          backdropFilter: 'blur(8px)',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+          borderRadius: 1
+        }}
+      >
         <Button
           variant="contained"
           startIcon={<SaveIcon />}
           onClick={saveAssessment}
           color="primary"
+          disabled={!canSave}
+          title={!canSave ? 
+            (!isAssessmentComplete ? 'Complete all assessment areas first' : 'Complete patient information first') : 
+            'Save assessment'
+          }
         >
           Save Assessment
         </Button>
@@ -396,6 +483,14 @@ const AssessmentCard: React.FC<AssessmentCardProps> = ({
         {saveMessage && (
           <Alert severity="success" sx={{ py: 0 }}>
             {saveMessage}
+          </Alert>
+        )}
+        {!canSave && (
+          <Alert severity="info" sx={{ py: 0, flex: 1 }}>
+            {!isAssessmentComplete ? 
+              `Complete all 24 assessment areas to save (${Object.values(selectedGrades).filter(val => val !== null).length}/24 completed)` :
+              'Complete patient information (name, DOB, assessment date, and clinician) to save'
+            }
           </Alert>
         )}
       </Box>

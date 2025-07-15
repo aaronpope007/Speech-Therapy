@@ -24,21 +24,10 @@ import {
   FileDownload as ExportIcon,
   FileUpload as ImportIcon,
 } from "@mui/icons-material";
+import { PatientService } from "../../services/PatientService";
+import { AssessmentData } from "../../types/Patient";
 
-interface PatientInfo {
-  name: string;
-  dateOfBirth: string;
-  assessmentDate: string;
-  clinician: string;
-}
 
-interface AssessmentData {
-  patientInfo: PatientInfo;
-  selectedGrades: { [key: number]: number | null };
-  notes: string;
-  savedDate: string;
-  id: string;
-}
 
 interface AssessmentListProps {
   onLoadAssessment: (assessment: AssessmentData) => void;
@@ -63,26 +52,7 @@ const AssessmentList: React.FC<AssessmentListProps> = ({
   }, []);
 
   const loadAssessments = () => {
-    const savedAssessments: AssessmentData[] = [];
-    
-    // Get all localStorage keys that start with 'masa-assessment'
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (key && key.startsWith('masa-assessment-')) {
-        try {
-          const data = JSON.parse(localStorage.getItem(key)!);
-          savedAssessments.push({
-            ...data,
-            id: key,
-          });
-        } catch (error) {
-          console.error('Error loading assessment:', error);
-        }
-      }
-    }
-
-    // Sort by saved date (newest first)
-    savedAssessments.sort((a, b) => new Date(b.savedDate).getTime() - new Date(a.savedDate).getTime());
+    const savedAssessments = PatientService.getAllAssessments();
     setAssessments(savedAssessments);
   };
 
@@ -102,7 +72,7 @@ const AssessmentList: React.FC<AssessmentListProps> = ({
 
   const confirmDelete = () => {
     if (assessmentToDelete) {
-      localStorage.removeItem(assessmentToDelete.id);
+      PatientService.deleteAssessment(assessmentToDelete.id);
       loadAssessments(); // Reload the list
       setDeleteDialogOpen(false);
       setAssessmentToDelete(null);
@@ -161,13 +131,11 @@ const AssessmentList: React.FC<AssessmentListProps> = ({
 
         // Import assessments with new IDs
         validAssessments.forEach((assessment: AssessmentData) => {
-          const newId = `masa-assessment-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
           const assessmentToSave = {
             ...assessment,
-            id: newId,
             savedDate: new Date().toISOString(),
           };
-          localStorage.setItem(newId, JSON.stringify(assessmentToSave));
+          PatientService.createAssessment(assessmentToSave);
         });
 
         loadAssessments();

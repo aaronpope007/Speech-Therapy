@@ -4,21 +4,18 @@ import AssessmentCard from "./AssessmentCard";
 import ClinicalSummary from "./ClinicalSummary";
 import AssessmentList from "./AssessmentList";
 import PatientTracking from "./PatientTracking";
-import { List as ListIcon, Assessment as AssessmentIcon, Analytics as AnalyticsIcon, Person as PersonIcon } from "@mui/icons-material";
+import Dashboard from "../../components/Dashboard/Dashboard";
+import PatientSelection from "../../components/Assessment/PatientSelection";
+import { List as ListIcon, Assessment as AssessmentIcon, Analytics as AnalyticsIcon, Person as PersonIcon, Home as HomeIcon } from "@mui/icons-material";
+import { PatientService } from "../../services/PatientService";
+import { Patient, AssessmentData } from "../../types/Patient";
 
 interface PatientInfo {
   name: string;
   dateOfBirth: string;
+  mrn: string;
   assessmentDate: string;
   clinician: string;
-}
-
-interface AssessmentData {
-  patientInfo: PatientInfo;
-  selectedGrades: { [key: number]: number | null };
-  notes: string;
-  savedDate: string;
-  id?: string;
 }
 
 const theme = createTheme({
@@ -37,11 +34,14 @@ const MasaMain: React.FC = () => {
   const [patientInfo, setPatientInfo] = useState<PatientInfo>({
     name: "",
     dateOfBirth: "",
+    mrn: "",
     assessmentDate: new Date().toISOString().split('T')[0],
     clinician: "",
   });
   const [notes, setNotes] = useState<string>("");
-  const [currentView, setCurrentView] = useState<'assessment' | 'list' | 'analytics' | 'patients'>('list');
+  const [currentView, setCurrentView] = useState<'dashboard' | 'assessment' | 'list' | 'analytics' | 'patients'>('dashboard');
+  const [selectedPatient, setSelectedPatient] = useState<Patient | undefined>(undefined);
+  const [patientSelectionOpen, setPatientSelectionOpen] = useState(false);
 
   // Calculate total score
   const totalScore = Object.values(selectedGrades).reduce((acc: number, val) => acc + (typeof val === 'number' ? val : 0), 0);
@@ -51,7 +51,12 @@ const MasaMain: React.FC = () => {
   const totalAreas = 24; // Total MASA assessment areas
   const progressPercentage = (completedAreas / totalAreas) * 100;
 
-  const handleLoadAssessment = (assessment: { selectedGrades: { [key: number]: number | null }; patientInfo: PatientInfo; notes: string }) => {
+  // Migrate existing data on first load
+  useEffect(() => {
+    PatientService.migrateExistingAssessments();
+  }, []);
+
+  const handleLoadAssessment = (assessment: AssessmentData) => {
     setSelectedGrades(assessment.selectedGrades);
     setPatientInfo(assessment.patientInfo);
     setNotes(assessment.notes || "");
@@ -63,46 +68,125 @@ const MasaMain: React.FC = () => {
     setPatientInfo({
       name: "",
       dateOfBirth: "",
+      mrn: "",
       assessmentDate: new Date().toISOString().split('T')[0],
       clinician: "",
     });
     setNotes("");
+    setSelectedPatient(undefined);
     setCurrentView('assessment');
+  };
+
+  const handlePatientSelected = (patient: Patient) => {
+    setSelectedPatient(patient);
+    setPatientInfo(prev => ({
+      ...prev,
+      name: patient.name,
+      dateOfBirth: patient.dateOfBirth,
+      mrn: patient.mrn,
+    }));
+  };
+
+  const handlePatientSelect = () => {
+    setPatientSelectionOpen(true);
+  };
+
+  const getNavigationButton = () => {
+    switch (currentView) {
+      case 'dashboard':
+        return (
+          <Button
+            color="inherit"
+            startIcon={<AssessmentIcon />}
+            onClick={() => setCurrentView('assessment')}
+          >
+            New Assessment
+          </Button>
+        );
+      case 'assessment':
+        return (
+          <Button
+            color="inherit"
+            startIcon={<ListIcon />}
+            onClick={() => setCurrentView('list')}
+          >
+            Saved Assessments
+          </Button>
+        );
+      case 'list':
+        return (
+          <Button
+            color="inherit"
+            startIcon={<AnalyticsIcon />}
+            onClick={() => setCurrentView('analytics')}
+          >
+            Analytics
+          </Button>
+        );
+      case 'analytics':
+        return (
+          <Button
+            color="inherit"
+            startIcon={<PersonIcon />}
+            onClick={() => setCurrentView('patients')}
+          >
+            Patient Tracking
+          </Button>
+        );
+      case 'patients':
+        return (
+          <Button
+            color="inherit"
+            startIcon={<HomeIcon />}
+            onClick={() => setCurrentView('dashboard')}
+          >
+            Dashboard
+          </Button>
+        );
+      default:
+        return null;
+    }
+  };
+
+  const getViewTitle = () => {
+    switch (currentView) {
+      case 'dashboard':
+        return 'Dashboard';
+      case 'assessment':
+        return 'MASA Assessment';
+      case 'list':
+        return 'Saved Assessments';
+      case 'analytics':
+        return 'Analytics';
+      case 'patients':
+        return 'Patient Tracking';
+      default:
+        return 'MASA Swallowing Assessment';
+    }
   };
 
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <Box sx={{ minHeight: '100vh', width: '100vw', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', background: '#fff' }}>
-        <AppBar position="static" sx={{ mb: 3, width: '100%', maxWidth: 600 }}>
+        <AppBar position="static" sx={{ mb: 3, width: '100%', maxWidth: 1200 }}>
           <Toolbar>
             <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-              MASA Swallowing Assessment
+              {getViewTitle()}
             </Typography>
-            <Button
-              color="inherit"
-              startIcon={
-                currentView === 'list' ? <AssessmentIcon /> : 
-                currentView === 'analytics' ? <AnalyticsIcon /> : 
-                currentView === 'patients' ? <PersonIcon /> : 
-                <ListIcon />
-              }
-              onClick={() => {
-                if (currentView === 'list') setCurrentView('assessment');
-                else if (currentView === 'assessment') setCurrentView('analytics');
-                else if (currentView === 'analytics') setCurrentView('patients');
-                else setCurrentView('list');
-              }}
-            >
-              {currentView === 'list' ? 'New Assessment' : 
-               currentView === 'analytics' ? 'Saved Assessments' : 
-               currentView === 'patients' ? 'Analytics' : 
-               'Patient Tracking'}
-            </Button>
+            {getNavigationButton()}
           </Toolbar>
         </AppBar>
+        
         <Container sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', p: 4, width: '100%', maxWidth: 1200 }}>
-          {currentView === 'list' ? (
+          {currentView === 'dashboard' ? (
+            <Dashboard
+              onStartNewAssessment={handleStartNew}
+              onLoadAssessment={handleLoadAssessment}
+              onNavigateToPatients={() => setCurrentView('patients')}
+              onNavigateToAnalytics={() => setCurrentView('analytics')}
+            />
+          ) : currentView === 'list' ? (
             <AssessmentList
               onLoadAssessment={handleLoadAssessment}
               onStartNew={handleStartNew}
@@ -127,7 +211,21 @@ const MasaMain: React.FC = () => {
 
               {/* Progress Indicator */}
               {completedAreas > 0 && (
-                <Box sx={{ width: '100%', mb: 3 }}>
+                <Box 
+                  sx={{ 
+                    width: '100%', 
+                    mb: 3,
+                    position: 'sticky',
+                    top: 0,
+                    zIndex: 1000,
+                    bgcolor: 'background.paper',
+                    py: 2,
+                    borderBottom: '1px solid',
+                    borderColor: 'divider',
+                    backdropFilter: 'blur(8px)',
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                  }}
+                >
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
                     <Typography variant="body2" color="text.secondary">
                       Assessment Progress
@@ -153,6 +251,8 @@ const MasaMain: React.FC = () => {
                 setPatientInfo={setPatientInfo}
                 notes={notes}
                 setNotes={setNotes}
+                selectedPatient={selectedPatient}
+                onPatientSelect={handlePatientSelect}
               />
               <ClinicalSummary
                 totalScore={totalScore}
@@ -162,6 +262,13 @@ const MasaMain: React.FC = () => {
             </>
           )}
         </Container>
+
+        {/* Patient Selection Dialog */}
+        <PatientSelection
+          open={patientSelectionOpen}
+          onClose={() => setPatientSelectionOpen(false)}
+          onPatientSelected={handlePatientSelected}
+        />
       </Box>
     </ThemeProvider>
   );
@@ -172,18 +279,7 @@ const AnalyticsView: React.FC = () => {
   const [assessments, setAssessments] = useState<AssessmentData[]>([]);
 
   useEffect(() => {
-    const savedAssessments: AssessmentData[] = [];
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (key && key.startsWith('masa-assessment-')) {
-        try {
-          const data = JSON.parse(localStorage.getItem(key)!);
-          savedAssessments.push(data);
-        } catch (error) {
-          console.error('Error loading assessment:', error);
-        }
-      }
-    }
+    const savedAssessments = PatientService.getAllAssessments();
     setAssessments(savedAssessments);
   }, []);
 
