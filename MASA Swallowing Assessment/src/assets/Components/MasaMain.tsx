@@ -3,7 +3,8 @@ import { Container, Typography, Box, CssBaseline, ThemeProvider, createTheme, Bu
 import AssessmentCard from "./AssessmentCard";
 import ClinicalSummary from "./ClinicalSummary";
 import AssessmentList from "./AssessmentList";
-import { List as ListIcon, Assessment as AssessmentIcon, Analytics as AnalyticsIcon } from "@mui/icons-material";
+import PatientTracking from "./PatientTracking";
+import { List as ListIcon, Assessment as AssessmentIcon, Analytics as AnalyticsIcon, Person as PersonIcon } from "@mui/icons-material";
 
 interface PatientInfo {
   name: string;
@@ -40,7 +41,7 @@ const MasaMain: React.FC = () => {
     clinician: "",
   });
   const [notes, setNotes] = useState<string>("");
-  const [currentView, setCurrentView] = useState<'assessment' | 'list' | 'analytics'>('list');
+  const [currentView, setCurrentView] = useState<'assessment' | 'list' | 'analytics' | 'patients'>('list');
 
   // Calculate total score
   const totalScore = Object.values(selectedGrades).reduce((acc: number, val) => acc + (typeof val === 'number' ? val : 0), 0);
@@ -80,18 +81,27 @@ const MasaMain: React.FC = () => {
             </Typography>
             <Button
               color="inherit"
-              startIcon={currentView === 'list' ? <AssessmentIcon /> : currentView === 'analytics' ? <AnalyticsIcon /> : <ListIcon />}
+              startIcon={
+                currentView === 'list' ? <AssessmentIcon /> : 
+                currentView === 'analytics' ? <AnalyticsIcon /> : 
+                currentView === 'patients' ? <PersonIcon /> : 
+                <ListIcon />
+              }
               onClick={() => {
                 if (currentView === 'list') setCurrentView('assessment');
                 else if (currentView === 'assessment') setCurrentView('analytics');
+                else if (currentView === 'analytics') setCurrentView('patients');
                 else setCurrentView('list');
               }}
             >
-              {currentView === 'list' ? 'New Assessment' : currentView === 'analytics' ? 'Saved Assessments' : 'Analytics'}
+              {currentView === 'list' ? 'New Assessment' : 
+               currentView === 'analytics' ? 'Saved Assessments' : 
+               currentView === 'patients' ? 'Analytics' : 
+               'Patient Tracking'}
             </Button>
           </Toolbar>
         </AppBar>
-        <Container sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', p: 4, width: '100%', maxWidth: 600 }}>
+        <Container sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', p: 4, width: '100%', maxWidth: 1200 }}>
           {currentView === 'list' ? (
             <AssessmentList
               onLoadAssessment={handleLoadAssessment}
@@ -99,6 +109,8 @@ const MasaMain: React.FC = () => {
             />
           ) : currentView === 'analytics' ? (
             <AnalyticsView />
+          ) : currentView === 'patients' ? (
+            <PatientTracking onLoadAssessment={handleLoadAssessment} />
           ) : (
             <>
               <Box sx={{ mb: 4, textAlign: 'center' }}>

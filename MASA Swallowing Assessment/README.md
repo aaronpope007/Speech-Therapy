@@ -4,6 +4,20 @@ A comprehensive React application for conducting MASA (Mann Assessment of Swallo
 
 ## 🚀 Features
 
+### 🔐 Authentication & Security
+- **User Authentication**: Secure login/signup with Firebase Auth
+- **Role-Based Access**: Clinician and Administrator roles
+- **PHI Encryption**: All patient data encrypted with AES-256
+- **Secure API**: Firebase Firestore with encrypted data storage
+- **Session Management**: Automatic session handling and logout
+
+### 📱 Responsive Design
+- **Mobile-First**: Optimized for iPhone and Android
+- **Tablet Support**: Responsive layouts for iPad and tablets
+- **Desktop Experience**: Full-featured desktop interface
+- **Conditional Rendering**: Viewport-based component rendering
+- **Touch-Friendly**: Optimized for touch interactions
+
 ### 📋 Assessment Modes
 - **Quick Assessment Mode**: Numbered buttons for rapid scoring by experienced clinicians
 - **Detailed Assessment Mode**: Expandable accordions with full descriptions and instructions
@@ -11,34 +25,34 @@ A comprehensive React application for conducting MASA (Mann Assessment of Swallo
 - **Real-time Scoring**: Instant calculation and interpretation of results
 
 ### 💾 Data Management
-- **Local Storage**: Automatic saving to browser storage
+- **Cloud Storage**: Secure Firebase Firestore database
+- **Local Backup**: Offline capability with local storage
 - **Export/Import**: JSON file export and import functionality
 - **PDF Reports**: Generate professional PDF reports of assessments
-- **Cloud Sync**: Firebase integration for secure cloud storage (optional)
+- **Data Encryption**: End-to-end encryption for all sensitive data
 
 ### 📊 Analytics & Insights
 - **Assessment Analytics**: View statistics across all assessments
 - **Severity Distribution**: Track dysphagia severity patterns
 - **Average Scores**: Monitor performance trends
 - **Data Visualization**: Clear charts and metrics
+- **Patient Progress Tracking**: Monitor individual patient progress over time
+- **Trend Analysis**: Identify improving, declining, or stable patterns
+- **Longitudinal Reports**: Export patient progress reports
 
 ### 🏥 Clinical Features
 - **Automated Recommendations**: Context-sensitive clinical guidance
 - **Diet Recommendations**: Specific texture and consistency suggestions
 - **Risk Assessment**: Color-coded aspiration risk indicators
 - **Clinical Notes**: Free-text observations and recommendations
+- **Patient Management**: Complete patient lifecycle management
 
 ### ♿ Accessibility & UX
 - **Keyboard Navigation**: Full keyboard support for all interactions
 - **Screen Reader Support**: ARIA labels and semantic HTML
 - **Responsive Design**: Works on desktop, tablet, and mobile
 - **PWA Support**: Install as a native app with offline capability
-
-### 🔒 Security & Privacy
-- **Environment Variables**: Secure configuration management
-- **Local Data**: Patient data stays on your device by default
-- **Optional Cloud**: Firebase integration for team collaboration
-- **Data Export**: Full control over your assessment data
+- **Multi-Device Sync**: Seamless data synchronization across devices
 
 ## Assessment Areas (24 Total)
 
@@ -139,6 +153,14 @@ VITE_FIREBASE_APP_ID=your-app-id
 - **Import**: Upload previously exported assessment files
 - **PDF Reports**: Generate professional clinical reports
 - **Analytics**: View statistics and trends across assessments
+
+### Patient Progress Tracking
+- **Patient Groups**: Automatically groups assessments by patient name and DOB
+- **Progress Trends**: Identifies improving, declining, or stable patterns
+- **Assessment History**: View all assessments for a specific patient
+- **Trend Analysis**: Requires at least 3 assessments to determine trends
+- **Progress Reports**: Export comprehensive patient progress reports
+- **Quick Access**: Load any previous assessment for comparison
 
 ## 📊 Scoring Reference
 
