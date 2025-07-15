@@ -2,43 +2,43 @@
 
 A comprehensive React application for conducting MASA (Mann Assessment of Swallowing Ability) assessments with automated scoring and clinical recommendations.
 
-## Features
+## 🚀 Features
 
-### 🚀 Quick Assessment Mode
-- **Short Form Buttons**: Quick score selection for clinicians familiar with MASA
-- Each assessment area has numbered buttons (e.g., "10", "8", "6") for rapid scoring
-- Perfect for experienced clinicians who know the MASA scoring system well
+### 📋 Assessment Modes
+- **Quick Assessment Mode**: Numbered buttons for rapid scoring by experienced clinicians
+- **Detailed Assessment Mode**: Expandable accordions with full descriptions and instructions
+- **Progress Tracking**: Visual progress bar showing completion status
+- **Real-time Scoring**: Instant calculation and interpretation of results
 
-### 📋 Detailed Assessment Mode  
-- **Expandable Accordions**: Click to expand any assessment area for detailed information
-- **Complete Descriptions**: Full task descriptions and instructions for each area
-- **Radio Button Selection**: Choose from detailed scoring options with explanations
-- Ideal for learning the MASA or when you need reference information
+### 💾 Data Management
+- **Local Storage**: Automatic saving to browser storage
+- **Export/Import**: JSON file export and import functionality
+- **PDF Reports**: Generate professional PDF reports of assessments
+- **Cloud Sync**: Firebase integration for secure cloud storage (optional)
 
-### 💾 Save & Load Functionality
-- **Local Browser Storage**: Assessments are automatically saved to your browser's local storage
-- **Patient Information**: Store patient name, DOB, assessment date, and clinician
-- **Persistent Data**: Your work is saved as you go and restored when you return
-- **Clear All Option**: Reset the assessment with confirmation dialog
+### 📊 Analytics & Insights
+- **Assessment Analytics**: View statistics across all assessments
+- **Severity Distribution**: Track dysphagia severity patterns
+- **Average Scores**: Monitor performance trends
+- **Data Visualization**: Clear charts and metrics
 
-### 📊 Automated Scoring & Interpretation
-- **Real-time Scoring**: Total score calculated as you complete the assessment
-- **Severity Classification**: 
-  - No abnormality (178-200)
-  - Mild dysphagia (168-177)
-  - Moderate dysphagia (139-167)
-  - Severe dysphagia (≤138)
-- **Aspiration Risk Assessment**: Color-coded risk indicators
+### 🏥 Clinical Features
+- **Automated Recommendations**: Context-sensitive clinical guidance
+- **Diet Recommendations**: Specific texture and consistency suggestions
+- **Risk Assessment**: Color-coded aspiration risk indicators
+- **Clinical Notes**: Free-text observations and recommendations
 
-### 🏥 Clinical Recommendations
-- **Automated Recommendations**: Context-sensitive clinical guidance based on scores
-- **Diet Recommendations**: Specific diet texture and consistency suggestions
-- **Follow-up Guidelines**: Monitoring and referral recommendations
-- **Area-Specific Alerts**: Special considerations for low-scoring assessment areas
+### ♿ Accessibility & UX
+- **Keyboard Navigation**: Full keyboard support for all interactions
+- **Screen Reader Support**: ARIA labels and semantic HTML
+- **Responsive Design**: Works on desktop, tablet, and mobile
+- **PWA Support**: Install as a native app with offline capability
 
-### 📝 Clinical Notes
-- **Free-text Notes**: Add custom observations and recommendations
-- **Comprehensive Summary**: Patient info, scores, and recommendations in one view
+### 🔒 Security & Privacy
+- **Environment Variables**: Secure configuration management
+- **Local Data**: Patient data stays on your device by default
+- **Optional Cloud**: Firebase integration for team collaboration
+- **Data Export**: Full control over your assessment data
 
 ## Assessment Areas (24 Total)
 
@@ -71,44 +71,76 @@ The application includes all 24 MASA assessment areas:
 
 **Maximum Total Score: 200 points**
 
-## How to Use
+## 🛠️ Technical Stack
+
+- **Framework**: React 18 with TypeScript
+- **UI Library**: Material-UI (MUI) v5
+- **Build Tool**: Vite
+- **Storage**: Browser localStorage + Firebase Firestore (optional)
+- **PDF Generation**: jsPDF + html2canvas
+- **PWA**: Service Worker support
+- **State Management**: React Hooks
+- **Form Handling**: React Hook Form
+
+## 📦 Installation & Setup
+
+### Prerequisites
+- Node.js 16+ 
+- npm or yarn
+
+### Basic Setup
+```bash
+# Clone the repository
+git clone <repository-url>
+cd masa-swallowing-assessment
+
+# Install dependencies
+npm install
+
+# Start development server
+npm run dev
+```
+
+### Firebase Setup (Optional)
+1. Create a Firebase project at [firebase.google.com](https://firebase.google.com)
+2. Copy your Firebase config to `env.example` and rename to `.env.local`
+3. Update the Firebase configuration in `src/firebase/config.ts`
+
+### Environment Variables
+Copy `env.example` to `.env.local` and configure:
+```bash
+# Firebase Configuration
+VITE_FIREBASE_API_KEY=your-api-key
+VITE_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
+VITE_FIREBASE_PROJECT_ID=your-project-id
+VITE_FIREBASE_STORAGE_BUCKET=your-project.appspot.com
+VITE_FIREBASE_MESSAGING_SENDER_ID=123456789
+VITE_FIREBASE_APP_ID=your-app-id
+```
+
+## 🎯 Usage Guide
 
 ### Quick Assessment (Experienced Users)
-1. Enter patient information at the top
-2. Use the numbered buttons in each section header for rapid scoring
+1. Enter patient information
+2. Use numbered buttons for rapid scoring
 3. View real-time total score and interpretation
-4. Save when complete
+4. Export PDF report when complete
 
 ### Detailed Assessment (Learning/Reference)
 1. Enter patient information
-2. Click on any assessment area to expand
-3. Read the description and task instructions
-4. Select the appropriate score using radio buttons
-5. Continue through all 24 areas
-6. Review clinical summary and recommendations
+2. Click assessment areas to expand details
+3. Read descriptions and task instructions
+4. Select appropriate scores using radio buttons
+5. Review clinical summary and recommendations
 
 ### Data Management
-- **Auto-save**: Your work is automatically saved as you go
-- **Manual Save**: Click "Save Assessment" to store current state
-- **Clear All**: Use "Clear All" button to reset (with confirmation)
-- **Data Persistence**: Return anytime to continue where you left off
+- **Auto-save**: Work is automatically saved as you go
+- **Export**: Download individual assessments or all data as JSON
+- **Import**: Upload previously exported assessment files
+- **PDF Reports**: Generate professional clinical reports
+- **Analytics**: View statistics and trends across assessments
 
-## Technical Information
-
-- **Framework**: React with TypeScript
-- **UI Library**: Material-UI (MUI)
-- **Storage**: Browser localStorage
-- **Scoring**: Real-time calculation with clinical interpretation
-- **Responsive**: Works on desktop and tablet devices
-
-## Getting Started
-
-1. Clone the repository
-2. Install dependencies: `npm install`
-3. Start development server: `npm run dev`
-4. Open http://localhost:5173/ in your browser
-
-## Scoring Reference
+## 📊 Scoring Reference
 
 ### Dysphagia Severity
 - **178-200**: No abnormality detected
@@ -122,10 +154,80 @@ The application includes all 24 MASA assessment areas:
 - **141-148**: Moderate aspiration risk
 - **≤140**: Severe aspiration risk
 
-## Clinical Use
+## 🔧 Development
+
+### Available Scripts
+```bash
+npm run dev          # Start development server
+npm run build        # Build for production
+npm run preview      # Preview production build
+npm run lint         # Run ESLint
+```
+
+### Project Structure
+```
+src/
+├── assets/
+│   ├── Components/          # React components
+│   │   ├── AssessmentCard.tsx
+│   │   ├── AssessmentList.tsx
+│   │   ├── ClinicalSummary.tsx
+│   │   └── MasaMain.tsx
+│   └── AssessmentAreas.tsx  # Assessment data
+├── firebase/               # Firebase configuration
+├── App.tsx                 # Main app component
+└── main.tsx               # App entry point
+```
+
+## 🚀 Deployment
+
+### Build for Production
+```bash
+npm run build
+```
+
+### Deploy to Firebase Hosting
+```bash
+npm install -g firebase-tools
+firebase login
+firebase init hosting
+firebase deploy
+```
+
+### Deploy to Vercel/Netlify
+Connect your repository to Vercel or Netlify for automatic deployments.
+
+## 📱 PWA Features
+
+The app can be installed as a Progressive Web App:
+- **Offline Support**: Works without internet connection
+- **App-like Experience**: Full-screen mode and native feel
+- **Automatic Updates**: Updates when new versions are available
+- **Home Screen Icon**: Add to home screen for quick access
+
+## 🔒 Privacy & Security
+
+- **Local Storage**: All data is stored locally by default
+- **No Tracking**: No analytics or tracking scripts
+- **HIPAA Compliance**: Designed with healthcare privacy in mind
+- **Data Control**: Full control over data export and deletion
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests if applicable
+5. Submit a pull request
+
+## 📄 License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## ⚠️ Clinical Disclaimer
 
 This application is designed to support clinical decision-making but should not replace professional clinical judgment. Always follow your institution's protocols and consult with appropriate healthcare professionals for patient care decisions.
 
 ---
 
-**Note**: This application stores data locally in your browser. For clinical use, ensure compliance with your institution's data security and privacy policies.
+**Note**: This application stores data locally in your browser by default. For clinical use, ensure compliance with your institution's data security and privacy policies.

@@ -163,7 +163,7 @@ interface AssessmentAreaData {
   title: string;
   description: string;
   task: string;
-  grades: Record<number, Grade>;
+  grades: { [key: number]: Grade };
 }
 
 // Memoized Assessment Area Component
@@ -182,12 +182,20 @@ const AssessmentArea = React.memo<{
     handleSelect(gradeValue);
   }, [handleSelect]);
 
+  const handleKeyPress = React.useCallback((e: React.KeyboardEvent, gradeValue: number) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      handleSelect(gradeValue);
+    }
+  }, [handleSelect]);
+
   return (
     <Accordion sx={{ minWidth: 275, margin: 2, padding: 2 }}>
       <AccordionSummary
         aria-controls={`panel${areaIdx}-content`}
         id={`panel${areaIdx}-header`}
         expandIcon={<ArrowDownwardIcon />}
+        aria-label={`${area.title} assessment area`}
       >
         <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
           <Typography variant="h6" sx={{ flexGrow: 1 }}>
@@ -198,28 +206,32 @@ const AssessmentArea = React.memo<{
                 size="small"
                 color="primary"
                 sx={{ ml: 2 }}
+                aria-label={`Current score: ${selectedGrades[areaIdx]}`}
               />
             )}
           </Typography>
-                        <Stack direction="row" spacing={1} sx={{ marginLeft: "1.5rem" }}>
-                {Object.values(area.grades)
-                  .sort((a: Grade, b: Grade) => b.value - a.value)
-                  .map((grade: Grade) => (
-                    <div key={grade.value}>
-                      {grade.shortText && (
-                        <Button
-                          variant={selectedGrades[areaIdx] === grade.value ? "contained" : "outlined"}
-                          color="primary"
-                          size="small"
-                          sx={{ marginTop: "0.3rem", minWidth: 'auto' }}
-                          onClick={(e) => handleButtonClick(e, grade.value)}
-                        >
-                          {grade.value}
-                        </Button>
-                      )}
-                    </div>
-                  ))}
-              </Stack>
+          <Stack direction="row" spacing={1} sx={{ marginLeft: "1.5rem" }}>
+            {Object.values(area.grades)
+              .sort((a: Grade, b: Grade) => b.value - a.value)
+              .map((grade: Grade) => (
+                <div key={grade.value}>
+                  {grade.shortText && (
+                    <Button
+                      variant={selectedGrades[areaIdx] === grade.value ? "contained" : "outlined"}
+                      color="primary"
+                      size="small"
+                      sx={{ marginTop: "0.3rem", minWidth: 'auto' }}
+                      onClick={(e) => handleButtonClick(e, grade.value)}
+                      onKeyPress={(e) => handleKeyPress(e, grade.value)}
+                      aria-label={`Select score ${grade.value} for ${area.title}`}
+                      aria-pressed={selectedGrades[areaIdx] === grade.value}
+                    >
+                      {grade.value}
+                    </Button>
+                  )}
+                </div>
+              ))}
+          </Stack>
         </Box>
       </AccordionSummary>
 
@@ -245,33 +257,33 @@ const AssessmentArea = React.memo<{
           <FormLabel component="legend" sx={{ mb: 2, fontWeight: 'bold' }}>
             Select Score:
           </FormLabel>
-                        <RadioGroup
-                aria-label="grades"
-                name={`grades-${areaIdx}`}
-                value={selectedGrades[areaIdx] ?? ''}
-                onChange={(e) => handleSelect(Number(e.target.value))}
-              >
-                {Object.values(area.grades)
-                  .sort((a: Grade, b: Grade) => b.value - a.value)
-                  .map((grade: Grade) => (
-                    <FormControlLabel
-                      key={grade.value}
-                      value={grade.value}
-                      control={<Radio />}
-                      label={
-                        <Box>
-                          <Typography variant="body1" sx={{ fontWeight: 'bold' }}>
-                            {grade.value} points
-                          </Typography>
-                          <Typography variant="body2" color="text.secondary">
-                            {grade.text}
-                          </Typography>
-                        </Box>
-                      }
-                      sx={{ mb: 2, alignItems: 'flex-start' }}
-                    />
-                  ))}
-              </RadioGroup>
+          <RadioGroup
+            aria-label={`${area.title} scoring options`}
+            name={`grades-${areaIdx}`}
+            value={selectedGrades[areaIdx] || ''}
+            onChange={(e) => handleSelect(Number(e.target.value))}
+          >
+            {Object.values(area.grades)
+              .sort((a: Grade, b: Grade) => b.value - a.value)
+              .map((grade: Grade) => (
+                <FormControlLabel
+                  key={grade.value}
+                  value={grade.value}
+                  control={<Radio />}
+                  label={
+                    <Box>
+                      <Typography variant="body1" sx={{ fontWeight: 'bold' }}>
+                        {grade.value} - {grade.shortText}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        {grade.text}
+                      </Typography>
+                    </Box>
+                  }
+                  sx={{ mb: 2, alignItems: 'flex-start' }}
+                />
+              ))}
+          </RadioGroup>
         </FormControl>
       </AccordionDetails>
     </Accordion>
@@ -395,15 +407,15 @@ const AssessmentCard: React.FC<AssessmentCardProps> = ({
       />
 
       {/* Assessment Areas */}
-      {assessmentAreas.map((area, areaIdx) => (
-        <AssessmentArea
-          key={areaIdx}
-          area={area as AssessmentAreaData}
-          areaIdx={areaIdx}
-          selectedGrades={selectedGrades}
-          onSelect={handleSelect}
-        />
-      ))}
+              {assessmentAreas.map((area, areaIdx) => (
+          <AssessmentArea
+            key={areaIdx}
+            area={area as unknown as AssessmentAreaData}
+            areaIdx={areaIdx}
+            selectedGrades={selectedGrades}
+            onSelect={handleSelect}
+          />
+        ))}
 
       {/* Clinical Notes */}
       <Paper sx={{ p: 3, mt: 3 }}>

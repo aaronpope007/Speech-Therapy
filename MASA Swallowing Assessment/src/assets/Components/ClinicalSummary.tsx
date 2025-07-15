@@ -1,5 +1,8 @@
-import { Typography, Paper, Box, Alert } from "@mui/material";
-import React from "react";
+import { Typography, Paper, Box, Alert, Button } from "@mui/material";
+import { PictureAsPdf as PdfIcon } from "@mui/icons-material";
+import React, { useRef } from "react";
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
 
 interface ClinicalSummaryProps {
   totalScore: number;
@@ -17,6 +20,8 @@ const ClinicalSummary: React.FC<ClinicalSummaryProps> = ({
   selectedGrades, 
   patientInfo 
 }) => {
+  const summaryRef = useRef<HTMLDivElement>(null);
+
   // Generate recommendations based on score
   const generateRecommendations = () => {
     const recommendations = [];
@@ -86,65 +91,115 @@ const ClinicalSummary: React.FC<ClinicalSummaryProps> = ({
     }
   };
 
+  const generatePDF = async () => {
+    if (!summaryRef.current) return;
+
+    try {
+      const canvas = await html2canvas(summaryRef.current, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+      });
+
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const imgWidth = 210;
+      const pageHeight = 295;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      let heightLeft = imgHeight;
+
+      let position = 0;
+
+      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+
+      while (heightLeft >= 0) {
+        position = heightLeft - imgHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+      }
+
+      const fileName = `masa-report-${patientInfo.name || 'patient'}-${patientInfo.assessmentDate}.pdf`;
+      pdf.save(fileName);
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+    }
+  };
+
   const recommendations = generateRecommendations();
 
   return (
     <Paper sx={{ p: 3, mt: 3 }}>
-      <Typography variant="h5" gutterBottom>
-        Clinical Summary & Recommendations
-      </Typography>
-      
-      {totalScore > 0 && (
-        <Box sx={{ mb: 3 }}>
-          <Alert 
-            severity={totalScore >= 168 ? "success" : totalScore >= 139 ? "warning" : "error"}
-            sx={{ mb: 2 }}
-          >
-            <Typography variant="body1" sx={{ fontWeight: 'bold' }}>
-              MASA Total Score: {totalScore}/200
-            </Typography>
-            <Typography variant="body2">
-              {totalScore >= 178 ? "No abnormality detected" : 
-               totalScore >= 168 ? "Mild dysphagia" :
-               totalScore >= 139 ? "Moderate dysphagia" : "Severe dysphagia"}
-            </Typography>
-          </Alert>
-
-          <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>
-            Diet Recommendations:
-          </Typography>
-          <Typography variant="body1" sx={{ mb: 2, p: 2, bgcolor: 'grey.50', borderRadius: 1 }}>
-            {getDietRecommendations()}
-          </Typography>
-
-          <Typography variant="h6" gutterBottom>
-            Clinical Recommendations:
-          </Typography>
-          <Box component="ul" sx={{ pl: 2 }}>
-            {recommendations.map((rec, index) => (
-              <Typography component="li" key={index} variant="body2" sx={{ mb: 1 }}>
-                {rec}
-              </Typography>
-            ))}
-          </Box>
-
-          {patientInfo.name && (
-            <Box sx={{ mt: 3, p: 2, bgcolor: 'grey.50', borderRadius: 1 }}>
-              <Typography variant="body2" color="text.secondary">
-                Assessment completed for: <strong>{patientInfo.name}</strong><br />
-                Date: {patientInfo.assessmentDate}<br />
-                Clinician: {patientInfo.clinician || 'Not specified'}
-              </Typography>
-            </Box>
-          )}
-        </Box>
-      )}
-
-      {totalScore === 0 && (
-        <Typography variant="body1" color="text.secondary" sx={{ fontStyle: 'italic' }}>
-          Complete the assessment to generate clinical summary and recommendations.
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+        <Typography variant="h5" gutterBottom>
+          Clinical Summary & Recommendations
         </Typography>
-      )}
+        {totalScore > 0 && (
+          <Button
+            variant="outlined"
+            startIcon={<PdfIcon />}
+            onClick={generatePDF}
+            size="small"
+          >
+            Export PDF
+          </Button>
+        )}
+      </Box>
+      
+      <Box ref={summaryRef}>
+        {totalScore > 0 && (
+          <Box sx={{ mb: 3 }}>
+            <Alert 
+              severity={totalScore >= 168 ? "success" : totalScore >= 139 ? "warning" : "error"}
+              sx={{ mb: 2 }}
+            >
+              <Typography variant="body1" sx={{ fontWeight: 'bold' }}>
+                MASA Total Score: {totalScore}/200
+              </Typography>
+              <Typography variant="body2">
+                {totalScore >= 178 ? "No abnormality detected" : 
+                 totalScore >= 168 ? "Mild dysphagia" :
+                 totalScore >= 139 ? "Moderate dysphagia" : "Severe dysphagia"}
+              </Typography>
+            </Alert>
+
+            <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>
+              Diet Recommendations:
+            </Typography>
+            <Typography variant="body1" sx={{ mb: 2, p: 2, bgcolor: 'grey.50', borderRadius: 1 }}>
+              {getDietRecommendations()}
+            </Typography>
+
+            <Typography variant="h6" gutterBottom>
+              Clinical Recommendations:
+            </Typography>
+            <Box component="ul" sx={{ pl: 2 }}>
+              {recommendations.map((rec, index) => (
+                <Typography component="li" key={index} variant="body2" sx={{ mb: 1 }}>
+                  {rec}
+                </Typography>
+              ))}
+            </Box>
+
+            {patientInfo.name && (
+              <Box sx={{ mt: 3, p: 2, bgcolor: 'grey.50', borderRadius: 1 }}>
+                <Typography variant="body2" color="text.secondary">
+                  Assessment completed for: <strong>{patientInfo.name}</strong><br />
+                  Date: {patientInfo.assessmentDate}<br />
+                  Clinician: {patientInfo.clinician || 'Not specified'}
+                </Typography>
+              </Box>
+            )}
+          </Box>
+        )}
+
+        {totalScore === 0 && (
+          <Typography variant="body1" color="text.secondary" sx={{ fontStyle: 'italic' }}>
+            Complete the assessment to generate clinical summary and recommendations.
+          </Typography>
+        )}
+      </Box>
     </Paper>
   );
 };

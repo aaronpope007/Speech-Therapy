@@ -6,7 +6,6 @@ import {
   List,
   ListItem,
   ListItemText,
-  ListItemSecondaryAction,
   IconButton,
   Button,
   Dialog,
@@ -16,11 +15,14 @@ import {
   Chip,
   Grid,
   Divider,
+  Alert,
 } from "@mui/material";
 import {
   Delete as DeleteIcon,
   Download as DownloadIcon,
   Visibility as ViewIcon,
+  FileDownload as ExportIcon,
+  FileUpload as ImportIcon,
 } from "@mui/icons-material";
 
 interface PatientInfo {
@@ -52,6 +54,8 @@ const AssessmentList: React.FC<AssessmentListProps> = ({
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [assessmentToDelete, setAssessmentToDelete] = useState<AssessmentData | null>(null);
+  const [importDialogOpen, setImportDialogOpen] = useState(false);
+  const [importError, setImportError] = useState<string>("");
 
   // Load all saved assessments from localStorage
   useEffect(() => {
@@ -105,6 +109,77 @@ const AssessmentList: React.FC<AssessmentListProps> = ({
     }
   };
 
+  const handleExportAssessment = (assessment: AssessmentData) => {
+    const dataStr = JSON.stringify(assessment, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(dataBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `masa-assessment-${assessment.patientInfo.name || 'unnamed'}-${assessment.patientInfo.assessmentDate}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleExportAll = () => {
+    const dataStr = JSON.stringify(assessments, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(dataBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `masa-assessments-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleImportAssessments = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const content = e.target?.result as string;
+        const importedData = JSON.parse(content);
+        
+        // Validate imported data structure
+        if (!Array.isArray(importedData)) {
+          throw new Error('Invalid file format: Expected array of assessments');
+        }
+
+        // Validate each assessment has required fields
+        const validAssessments = importedData.filter((assessment: AssessmentData) => {
+          return assessment.patientInfo && assessment.selectedGrades && assessment.savedDate;
+        });
+
+        if (validAssessments.length === 0) {
+          throw new Error('No valid assessments found in file');
+        }
+
+        // Import assessments with new IDs
+        validAssessments.forEach((assessment: AssessmentData) => {
+          const newId = `masa-assessment-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+          const assessmentToSave = {
+            ...assessment,
+            id: newId,
+            savedDate: new Date().toISOString(),
+          };
+          localStorage.setItem(newId, JSON.stringify(assessmentToSave));
+        });
+
+        loadAssessments();
+        setImportDialogOpen(false);
+        setImportError("");
+      } catch (error) {
+        setImportError(error instanceof Error ? error.message : 'Failed to import assessments');
+      }
+    };
+    reader.readAsText(file);
+  };
+
   const getScoringInterpretation = (score: number) => {
     if (score >= 178) {
       return { severity: "No abnormality", color: "success" as const };
@@ -133,14 +208,36 @@ const AssessmentList: React.FC<AssessmentListProps> = ({
         <Typography variant="h4" component="h1" gutterBottom>
           Saved Assessments
         </Typography>
-        <Button
-          variant="contained"
-          color="primary"
-          onClick={onStartNew}
-          sx={{ minWidth: 120 }}
-        >
-          New Assessment
-        </Button>
+        <Box sx={{ display: 'flex', gap: 1 }}>
+          {assessments.length > 0 && (
+            <>
+              <Button
+                variant="outlined"
+                startIcon={<ExportIcon />}
+                onClick={handleExportAll}
+                size="small"
+              >
+                Export All
+              </Button>
+              <Button
+                variant="outlined"
+                startIcon={<ImportIcon />}
+                onClick={() => setImportDialogOpen(true)}
+                size="small"
+              >
+                Import
+              </Button>
+            </>
+          )}
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={onStartNew}
+            sx={{ minWidth: 120 }}
+          >
+            New Assessment
+          </Button>
+        </Box>
       </Box>
 
       {assessments.length === 0 ? (
@@ -178,6 +275,16 @@ const AssessmentList: React.FC<AssessmentListProps> = ({
                     <ListItemText
                       primary={
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
+                          <IconButton
+                            edge="start"
+                            aria-label="view"
+                            onClick={() => handleViewAssessment(assessment)}
+                            color="primary"
+                            size="small"
+                            sx={{ mr: 1 }}
+                          >
+                            <ViewIcon />
+                          </IconButton>
                           <Typography variant="h6" component="span">
                             {assessment.patientInfo.name || 'Unnamed Patient'}
                           </Typography>
@@ -202,6 +309,35 @@ const AssessmentList: React.FC<AssessmentListProps> = ({
                             <Typography variant="body2" color="text.secondary">
                               <strong>Clinician:</strong> {assessment.patientInfo.clinician || 'Not specified'}
                             </Typography>
+                            <Box sx={{ mt: 1, display: 'flex', gap: 1 }}>
+                              <IconButton
+                                edge="end"
+                                aria-label="load"
+                                onClick={() => handleLoadAssessment(assessment)}
+                                color="primary"
+                                size="small"
+                              >
+                                <DownloadIcon />
+                              </IconButton>
+                              <IconButton
+                                edge="end"
+                                aria-label="export"
+                                onClick={() => handleExportAssessment(assessment)}
+                                color="secondary"
+                                size="small"
+                              >
+                                <ExportIcon />
+                              </IconButton>
+                              <IconButton
+                                edge="end"
+                                aria-label="delete"
+                                onClick={() => handleDeleteAssessment(assessment)}
+                                color="error"
+                                size="small"
+                              >
+                                <DeleteIcon />
+                              </IconButton>
+                            </Box>
                           </Grid>
                           <Grid item xs={12} sm={6}>
                             <Typography variant="body2" color="text.secondary">
@@ -214,34 +350,6 @@ const AssessmentList: React.FC<AssessmentListProps> = ({
                         </Grid>
                       }
                     />
-                    <ListItemSecondaryAction>
-                      <Box sx={{ display: 'flex', gap: 1 }}>
-                        <IconButton
-                          edge="end"
-                          aria-label="view"
-                          onClick={() => handleViewAssessment(assessment)}
-                          color="primary"
-                        >
-                          <ViewIcon />
-                        </IconButton>
-                        <IconButton
-                          edge="end"
-                          aria-label="load"
-                          onClick={() => handleLoadAssessment(assessment)}
-                          color="primary"
-                        >
-                          <DownloadIcon />
-                        </IconButton>
-                        <IconButton
-                          edge="end"
-                          aria-label="delete"
-                          onClick={() => handleDeleteAssessment(assessment)}
-                          color="error"
-                        >
-                          <DeleteIcon />
-                        </IconButton>
-                      </Box>
-                    </ListItemSecondaryAction>
                   </ListItem>
                   {index < assessments.length - 1 && <Divider />}
                 </React.Fragment>
@@ -347,6 +455,36 @@ const AssessmentList: React.FC<AssessmentListProps> = ({
           <Button onClick={confirmDelete} color="error" variant="contained">
             Delete
           </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Import Dialog */}
+      <Dialog open={importDialogOpen} onClose={() => setImportDialogOpen(false)}>
+        <DialogTitle>Import Assessments</DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" sx={{ mb: 2 }}>
+            Select a JSON file containing MASA assessments to import.
+          </Typography>
+          {importError && (
+            <Alert severity="error" sx={{ mb: 2 }}>
+              {importError}
+            </Alert>
+          )}
+          <input
+            accept=".json"
+            style={{ display: 'none' }}
+            id="import-file"
+            type="file"
+            onChange={handleImportAssessments}
+          />
+          <label htmlFor="import-file">
+            <Button variant="contained" component="span">
+              Choose File
+            </Button>
+          </label>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setImportDialogOpen(false)}>Cancel</Button>
         </DialogActions>
       </Dialog>
     </Box>
