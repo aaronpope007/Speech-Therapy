@@ -24,7 +24,7 @@ import {
   FileDownload as ExportIcon,
   FileUpload as ImportIcon,
 } from "@mui/icons-material";
-import { PatientService } from "../../services/PatientService";
+import { EnhancedPatientService } from "../../services/EnhancedPatientService";
 import { AssessmentData } from "../../types/Patient";
 
 
@@ -51,9 +51,13 @@ const AssessmentList: React.FC<AssessmentListProps> = ({
     loadAssessments();
   }, []);
 
-  const loadAssessments = () => {
-    const savedAssessments = PatientService.getAllAssessments();
-    setAssessments(savedAssessments);
+  const loadAssessments = async () => {
+    try {
+      const savedAssessments = await EnhancedPatientService.getAllAssessments();
+      setAssessments(savedAssessments);
+    } catch (error) {
+      console.error('Error loading assessments:', error);
+    }
   };
 
   const handleLoadAssessment = (assessment: AssessmentData) => {
@@ -70,12 +74,16 @@ const AssessmentList: React.FC<AssessmentListProps> = ({
     setDeleteDialogOpen(true);
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (assessmentToDelete) {
-      PatientService.deleteAssessment(assessmentToDelete.id);
-      loadAssessments(); // Reload the list
-      setDeleteDialogOpen(false);
-      setAssessmentToDelete(null);
+      try {
+        await EnhancedPatientService.deleteAssessment(assessmentToDelete.id);
+        loadAssessments(); // Reload the list
+        setDeleteDialogOpen(false);
+        setAssessmentToDelete(null);
+      } catch (error) {
+        console.error('Error deleting assessment:', error);
+      }
     }
   };
 
@@ -105,12 +113,12 @@ const AssessmentList: React.FC<AssessmentListProps> = ({
     URL.revokeObjectURL(url);
   };
 
-  const handleImportAssessments = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImportAssessments = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
     const reader = new FileReader();
-    reader.onload = (e) => {
+    reader.onload = async (e) => {
       try {
         const content = e.target?.result as string;
         const importedData = JSON.parse(content);
@@ -130,13 +138,13 @@ const AssessmentList: React.FC<AssessmentListProps> = ({
         }
 
         // Import assessments with new IDs
-        validAssessments.forEach((assessment: AssessmentData) => {
+        for (const assessment of validAssessments) {
           const assessmentToSave = {
             ...assessment,
             savedDate: new Date().toISOString(),
           };
-          PatientService.createAssessment(assessmentToSave);
-        });
+          await EnhancedPatientService.createAssessment(assessmentToSave);
+        }
 
         loadAssessments();
         setImportDialogOpen(false);

@@ -21,7 +21,7 @@ import {
   Add as AddIcon,
   Search as SearchIcon,
 } from '@mui/icons-material';
-import { PatientService } from '../../services/PatientService';
+import { EnhancedPatientService } from '../../services/EnhancedPatientService';
 import { Patient } from '../../types/Patient';
 
 interface PatientSelectionProps {
@@ -51,9 +51,13 @@ const PatientSelection: React.FC<PatientSelectionProps> = ({
     }
   }, [open]);
 
-  const loadPatients = () => {
-    const allPatients = PatientService.getAllPatients();
-    setPatients(allPatients);
+  const loadPatients = async () => {
+    try {
+      const allPatients = await EnhancedPatientService.getAllPatients();
+      setPatients(allPatients);
+    } catch (error) {
+      console.error('Error loading patients:', error);
+    }
   };
 
   const filteredPatients = patients.filter(patient =>
@@ -61,13 +65,17 @@ const PatientSelection: React.FC<PatientSelectionProps> = ({
     patient.mrn.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleCreatePatient = () => {
+  const handleCreatePatient = async () => {
     if (newPatientData.name && newPatientData.dateOfBirth) {
-      const newPatient = PatientService.createPatient(newPatientData);
-      setNewPatientData({ name: '', dateOfBirth: '', mrn: '' });
-      setShowNewPatientForm(false);
-      loadPatients();
-      setSelectedPatientId(newPatient.id);
+      try {
+        const newPatient = await EnhancedPatientService.createPatient(newPatientData);
+        setNewPatientData({ name: '', dateOfBirth: '', mrn: '' });
+        setShowNewPatientForm(false);
+        loadPatients();
+        setSelectedPatientId(newPatient.id);
+      } catch (error) {
+        console.error('Error creating patient:', error);
+      }
     }
   };
 

@@ -29,7 +29,7 @@ import {
   Visibility as ViewIcon,
   Download as DownloadIcon,
 } from '@mui/icons-material';
-import { PatientService } from '../../services/PatientService';
+import { EnhancedPatientService } from '../../services/EnhancedPatientService';
 import { PatientWithAssessments, AssessmentData } from '../../types/Patient';
 
 interface DashboardProps {
@@ -56,35 +56,49 @@ const Dashboard: React.FC<DashboardProps> = ({
 
   useEffect(() => {
     loadPatients();
-    // Migrate existing data on first load
-    PatientService.migrateExistingAssessments();
   }, []);
 
-  const loadPatients = () => {
-    const patientsWithAssessments = PatientService.getPatientsWithAssessments();
-    setPatients(patientsWithAssessments);
+  const loadPatients = async () => {
+    try {
+      const patientsWithAssessments = await EnhancedPatientService.getPatientsWithAssessments();
+      setPatients(patientsWithAssessments);
+    } catch (error) {
+      console.error('Error loading patients:', error);
+    }
   };
 
-  const handleCreatePatient = () => {
+  const handleCreatePatient = async () => {
     if (newPatientData.name && newPatientData.dateOfBirth) {
-      PatientService.createPatient(newPatientData);
-      setNewPatientData({ name: '', dateOfBirth: '', mrn: '' });
-      setNewPatientDialog(false);
-      loadPatients();
+      try {
+        await EnhancedPatientService.createPatient(newPatientData);
+        setNewPatientData({ name: '', dateOfBirth: '', mrn: '' });
+        setNewPatientDialog(false);
+        loadPatients();
+      } catch (error) {
+        console.error('Error creating patient:', error);
+      }
     }
   };
 
-  const handleDeletePatient = (patientId: string) => {
+  const handleDeletePatient = async (patientId: string) => {
     if (window.confirm('Are you sure you want to delete this patient and all their assessments?')) {
-      PatientService.deletePatient(patientId);
-      loadPatients();
+      try {
+        await EnhancedPatientService.deletePatient(patientId);
+        loadPatients();
+      } catch (error) {
+        console.error('Error deleting patient:', error);
+      }
     }
   };
 
-  const handleDeleteAssessment = (assessmentId: string) => {
+  const handleDeleteAssessment = async (assessmentId: string) => {
     if (window.confirm('Are you sure you want to delete this assessment?')) {
-      PatientService.deleteAssessment(assessmentId);
-      loadPatients();
+      try {
+        await EnhancedPatientService.deleteAssessment(assessmentId);
+        loadPatients();
+      } catch (error) {
+        console.error('Error deleting assessment:', error);
+      }
     }
   };
 

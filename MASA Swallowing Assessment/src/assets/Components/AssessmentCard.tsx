@@ -25,7 +25,7 @@ import SaveIcon from "@mui/icons-material/Save";
 import DeleteIcon from "@mui/icons-material/Delete";
 
 import { Patient } from "../../types/Patient";
-import { PatientService } from "../../services/PatientService";
+import { EnhancedPatientService } from "../../services/EnhancedPatientService";
 
 interface PatientInfo {
   name: string;
@@ -396,18 +396,24 @@ const AssessmentCard: React.FC<AssessmentCardProps> = ({
     setSelectedGrades((prev) => ({ ...prev, [areaIdx]: gradeValue }));
   }, [setSelectedGrades]);
 
-  const saveAssessment = React.useCallback(() => {
-    const assessmentData = {
-      patientId: selectedPatient?.id || '',
-      patientInfo,
-      selectedGrades,
-      notes,
-      savedDate: new Date().toISOString(),
-    };
-    
-    PatientService.createAssessment(assessmentData);
-    setSaveMessage("Assessment saved successfully!");
-    setTimeout(() => setSaveMessage(""), 3000);
+  const saveAssessment = React.useCallback(async () => {
+    try {
+      const assessmentData = {
+        patientId: selectedPatient?.id || '',
+        patientInfo,
+        selectedGrades,
+        notes,
+        savedDate: new Date().toISOString(),
+      };
+      
+      await EnhancedPatientService.createAssessment(assessmentData);
+      setSaveMessage("Assessment saved successfully!");
+      setTimeout(() => setSaveMessage(""), 3000);
+    } catch (error) {
+      console.error('Error saving assessment:', error);
+      setSaveMessage("Error saving assessment. Please try again.");
+      setTimeout(() => setSaveMessage(""), 3000);
+    }
   }, [patientInfo, selectedGrades, notes, selectedPatient]);
 
   const clearAssessment = React.useCallback(() => {
