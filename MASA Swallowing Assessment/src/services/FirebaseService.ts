@@ -224,6 +224,35 @@ export class FirebaseService {
   }
 
   /**
+   * Update an existing assessment
+   */
+  static async updateAssessment(id: string, updates: Partial<Omit<AssessmentData, 'id'>>): Promise<AssessmentData | null> {
+    if (!this.isAvailable()) {
+      throw new Error('Firebase is not available');
+    }
+
+    try {
+      const docRef = doc(db!, this.ASSESSMENTS_COLLECTION, id);
+      const updateData = {
+        ...updates,
+        savedDate: new Date().toISOString()
+      };
+
+      await updateDoc(docRef, updateData);
+      
+      // Fetch and return updated assessment
+      const updatedDoc = await getDoc(docRef);
+      if (updatedDoc.exists()) {
+        return { id: updatedDoc.id, ...updatedDoc.data() } as AssessmentData;
+      }
+      return null;
+    } catch (error) {
+      console.error('Error updating assessment in Firebase:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Delete an assessment
    */
   static async deleteAssessment(id: string): Promise<boolean> {

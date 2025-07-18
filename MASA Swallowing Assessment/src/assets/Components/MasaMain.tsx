@@ -43,6 +43,7 @@ const MasaMain: React.FC = () => {
   const [currentView, setCurrentView] = useState<'dashboard' | 'assessment' | 'list' | 'analytics' | 'patients'>('dashboard');
   const [selectedPatient, setSelectedPatient] = useState<Patient | undefined>(undefined);
   const [patientSelectionOpen, setPatientSelectionOpen] = useState(false);
+  const [currentAssessmentId, setCurrentAssessmentId] = useState<string | null>(null);
 
   // Calculate total score
   const totalScore = Object.values(selectedGrades).reduce((acc: number, val) => acc + (typeof val === 'number' ? val : 0), 0);
@@ -61,6 +62,7 @@ const MasaMain: React.FC = () => {
     setSelectedGrades(assessment.selectedGrades);
     setPatientInfo(assessment.patientInfo);
     setNotes(assessment.notes || "");
+    setCurrentAssessmentId(assessment.id);
     setCurrentView('assessment');
   };
 
@@ -75,6 +77,7 @@ const MasaMain: React.FC = () => {
     });
     setNotes("");
     setSelectedPatient(undefined);
+    setCurrentAssessmentId(null);
     setCurrentView('assessment');
   };
 
@@ -255,6 +258,8 @@ const MasaMain: React.FC = () => {
                 setNotes={setNotes}
                 selectedPatient={selectedPatient}
                 onPatientSelect={handlePatientSelect}
+                currentAssessmentId={currentAssessmentId}
+                setCurrentAssessmentId={setCurrentAssessmentId}
               />
               <ClinicalSummary
                 totalScore={totalScore}

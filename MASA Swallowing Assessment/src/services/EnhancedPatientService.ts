@@ -163,6 +163,19 @@ export class EnhancedPatientService {
   }
 
   /**
+   * Update an existing assessment
+   */
+  static async updateAssessment(id: string, updates: Partial<Omit<AssessmentData, 'id'>>): Promise<AssessmentData | null> {
+    await this.initialize();
+    
+    if (this.useFirebase) {
+      return FirebaseService.updateAssessment(id, updates);
+    } else {
+      return PatientService.updateAssessment(id, updates);
+    }
+  }
+
+  /**
    * Delete an assessment
    */
   static async deleteAssessment(id: string): Promise<boolean> {

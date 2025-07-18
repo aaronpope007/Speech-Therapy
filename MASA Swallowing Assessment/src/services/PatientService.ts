@@ -105,6 +105,28 @@ export class PatientService {
     return assessment;
   }
 
+  static updateAssessment(id: string, updates: Partial<Omit<AssessmentData, 'id'>>): AssessmentData | null {
+    try {
+      const existingData = localStorage.getItem(this.ASSESSMENT_PREFIX + id);
+      if (!existingData) {
+        return null;
+      }
+
+      const existingAssessment = JSON.parse(existingData) as AssessmentData;
+      const updatedAssessment: AssessmentData = {
+        ...existingAssessment,
+        ...updates,
+        savedDate: new Date().toISOString()
+      };
+
+      localStorage.setItem(this.ASSESSMENT_PREFIX + id, JSON.stringify(updatedAssessment));
+      return updatedAssessment;
+    } catch (error) {
+      console.error('Error updating assessment:', error);
+      return null;
+    }
+  }
+
   static deleteAssessment(id: string): boolean {
     try {
       localStorage.removeItem(this.ASSESSMENT_PREFIX + id);

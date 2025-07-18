@@ -24,7 +24,7 @@ import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 import SaveIcon from "@mui/icons-material/Save";
 import DeleteIcon from "@mui/icons-material/Delete";
 
-import { Patient } from "../../types/Patient";
+import { Patient, AssessmentData } from "../../types/Patient";
 import { EnhancedPatientService } from "../../services/EnhancedPatientService";
 
 interface PatientInfo {
@@ -46,6 +46,8 @@ interface AssessmentCardProps {
   setNotes: React.Dispatch<React.SetStateAction<string>>;
   selectedPatient?: Patient;
   onPatientSelect?: () => void;
+  currentAssessmentId: string | null;
+  setCurrentAssessmentId: React.Dispatch<React.SetStateAction<string | null>>;
 }
 
 // Memoized Patient Information Section
@@ -338,6 +340,8 @@ const AssessmentCard: React.FC<AssessmentCardProps> = ({
   setNotes,
   selectedPatient,
   onPatientSelect,
+  currentAssessmentId,
+  setCurrentAssessmentId,
 }) => {
   const [saveMessage, setSaveMessage] = React.useState<string>("");
 
@@ -406,15 +410,31 @@ const AssessmentCard: React.FC<AssessmentCardProps> = ({
         savedDate: new Date().toISOString(),
       };
       
-      await EnhancedPatientService.createAssessment(assessmentData);
-      setSaveMessage("Assessment saved successfully!");
+      let savedAssessment: AssessmentData;
+      
+      if (currentAssessmentId) {
+        // Update existing assessment
+        const updatedAssessment = await EnhancedPatientService.updateAssessment(currentAssessmentId, assessmentData);
+        if (updatedAssessment) {
+          savedAssessment = updatedAssessment;
+          setSaveMessage("Assessment updated successfully!");
+        } else {
+          throw new Error('Failed to update assessment');
+        }
+      } else {
+        // Create new assessment
+        savedAssessment = await EnhancedPatientService.createAssessment(assessmentData);
+        setCurrentAssessmentId(savedAssessment.id);
+        setSaveMessage("Assessment saved successfully!");
+      }
+      
       setTimeout(() => setSaveMessage(""), 3000);
     } catch (error) {
       console.error('Error saving assessment:', error);
       setSaveMessage("Error saving assessment. Please try again.");
       setTimeout(() => setSaveMessage(""), 3000);
     }
-  }, [patientInfo, selectedGrades, notes, selectedPatient]);
+  }, [patientInfo, selectedGrades, notes, selectedPatient, currentAssessmentId, setCurrentAssessmentId]);
 
   const clearAssessment = React.useCallback(() => {
     if (window.confirm("Are you sure you want to start a new assessment? All current data will be cleared.")) {
@@ -427,10 +447,11 @@ const AssessmentCard: React.FC<AssessmentCardProps> = ({
         clinician: "",
       });
       setNotes("");
+      setCurrentAssessmentId(null);
       setSaveMessage("New assessment started!");
       setTimeout(() => setSaveMessage(""), 3000);
     }
-  }, [setSelectedGrades, setPatientInfo, setNotes]);
+  }, [setSelectedGrades, setPatientInfo, setNotes, setCurrentAssessmentId]);
 
   const handleNotesChange = React.useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setNotes(e.target.value);
