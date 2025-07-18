@@ -1,8 +1,23 @@
 # MASA: The Mann Assessment of Swallowing Ability
 
-A comprehensive React application for conducting MASA (Mann Assessment of Swallowing Ability) assessments with automated scoring and clinical recommendations.
+A comprehensive React application for conducting MASA (Mann Assessment of Swallowing Ability) assessments with automated scoring, patient management, and clinical recommendations.
 
 ## 🚀 Features
+
+### 🏥 Patient Management System
+- **Patient Profiles**: Complete patient records with name, date of birth, and MRN
+- **Patient Selection**: Choose existing patients or create new ones during assessment
+- **Longitudinal Tracking**: Monitor patient progress over time with multiple assessments
+- **Patient Dashboard**: Overview of all patients with assessment counts and trends
+- **Patient Search**: Find patients by name or medical record number
+- **Assessment History**: View all assessments for each patient in chronological order
+
+### 📊 Enhanced Dashboard
+- **Quick Stats**: Overview of total patients, assessments, and results
+- **Patient Cards**: Visual cards showing patient info, assessment count, and latest results
+- **View Toggle**: Switch between "All Assessments" and "By Patient" views
+- **Progress Indicators**: Real-time completion status and validation feedback
+- **Floating Actions**: Quick access to create new patients and assessments
 
 ### 🔐 Authentication & Security
 - **User Authentication**: Secure login/signup with Firebase Auth
@@ -21,8 +36,10 @@ A comprehensive React application for conducting MASA (Mann Assessment of Swallo
 ### 📋 Assessment Modes
 - **Quick Assessment Mode**: Numbered buttons for rapid scoring by experienced clinicians
 - **Detailed Assessment Mode**: Expandable accordions with full descriptions and instructions
-- **Progress Tracking**: Visual progress bar showing completion status
+- **Sticky Progress Bar**: Floating progress indicator that stays visible while scrolling
+- **Sticky Save Controls**: Save and clear buttons always accessible during assessment
 - **Real-time Scoring**: Instant calculation and interpretation of results
+- **Validation**: Prevents saving until all 24 assessment areas are completed
 
 ### 💾 Data Management
 - **Cloud Storage**: Secure Firebase Firestore database
@@ -30,6 +47,7 @@ A comprehensive React application for conducting MASA (Mann Assessment of Swallo
 - **Export/Import**: JSON file export and import functionality
 - **PDF Reports**: Generate professional PDF reports of assessments
 - **Data Encryption**: End-to-end encryption for all sensitive data
+- **Data Migration**: Automatic migration of existing assessments to new patient system
 
 ### 📊 Analytics & Insights
 - **Assessment Analytics**: View statistics across all assessments
@@ -39,6 +57,7 @@ A comprehensive React application for conducting MASA (Mann Assessment of Swallo
 - **Patient Progress Tracking**: Monitor individual patient progress over time
 - **Trend Analysis**: Identify improving, declining, or stable patterns
 - **Longitudinal Reports**: Export patient progress reports
+- **Patient Averages**: Calculate and display average scores per patient
 
 ### 🏥 Clinical Features
 - **Automated Recommendations**: Context-sensitive clinical guidance
@@ -46,6 +65,7 @@ A comprehensive React application for conducting MASA (Mann Assessment of Swallo
 - **Risk Assessment**: Color-coded aspiration risk indicators
 - **Clinical Notes**: Free-text observations and recommendations
 - **Patient Management**: Complete patient lifecycle management
+- **Assessment Validation**: Ensures complete assessments before saving
 
 ### ♿ Accessibility & UX
 - **Keyboard Navigation**: Full keyboard support for all interactions
@@ -53,6 +73,8 @@ A comprehensive React application for conducting MASA (Mann Assessment of Swallo
 - **Responsive Design**: Works on desktop, tablet, and mobile
 - **PWA Support**: Install as a native app with offline capability
 - **Multi-Device Sync**: Seamless data synchronization across devices
+- **Tooltips**: Helpful hover descriptions for all action buttons
+- **Visual Feedback**: Clear indicators for selected patients and actions
 
 ## Assessment Areas (24 Total)
 
@@ -95,6 +117,7 @@ The application includes all 24 MASA assessment areas:
 - **PWA**: Service Worker support
 - **State Management**: React Hooks
 - **Form Handling**: React Hook Form
+- **Data Management**: PatientService for centralized data operations
 
 ## 📦 Installation & Setup
 
@@ -134,18 +157,27 @@ VITE_FIREBASE_APP_ID=your-app-id
 
 ## 🎯 Usage Guide
 
-### Quick Assessment (Experienced Users)
-1. Enter patient information
-2. Use numbered buttons for rapid scoring
-3. View real-time total score and interpretation
-4. Export PDF report when complete
+### Getting Started
+1. **Dashboard**: Start at the main dashboard showing patient overview
+2. **Add Patients**: Use the floating action button or "New Patient" button
+3. **Create Assessment**: Click "New Assessment" and select a patient
+4. **Complete Assessment**: Fill out all 24 assessment areas
+5. **Save**: Assessment will be saved and linked to the patient
 
-### Detailed Assessment (Learning/Reference)
-1. Enter patient information
-2. Click assessment areas to expand details
-3. Read descriptions and task instructions
-4. Select appropriate scores using radio buttons
-5. Review clinical summary and recommendations
+### Patient Management
+- **Create Patient**: Add new patients with name, DOB, and MRN
+- **Select Patient**: Choose from existing patients during assessment creation
+- **Patient Search**: Find patients by name or medical record number
+- **Patient History**: View all assessments for a specific patient
+- **Patient Analytics**: See average scores and progress trends
+
+### Assessment Workflow
+1. **Patient Selection**: Choose existing patient or create new one
+2. **Assessment Areas**: Complete all 24 MASA assessment areas
+3. **Progress Tracking**: Monitor completion with sticky progress bar
+4. **Validation**: All areas must be completed before saving
+5. **Save Assessment**: Automatically linked to selected patient
+6. **Clinical Summary**: Review results and recommendations
 
 ### Data Management
 - **Auto-save**: Work is automatically saved as you go
@@ -155,7 +187,7 @@ VITE_FIREBASE_APP_ID=your-app-id
 - **Analytics**: View statistics and trends across assessments
 
 ### Patient Progress Tracking
-- **Patient Groups**: Automatically groups assessments by patient name and DOB
+- **Patient Groups**: Automatically groups assessments by patient
 - **Progress Trends**: Identifies improving, declining, or stable patterns
 - **Assessment History**: View all assessments for a specific patient
 - **Trend Analysis**: Requires at least 3 assessments to determine trends
@@ -194,8 +226,23 @@ src/
 │   │   ├── AssessmentCard.tsx
 │   │   ├── AssessmentList.tsx
 │   │   ├── ClinicalSummary.tsx
-│   │   └── MasaMain.tsx
+│   │   ├── MasaMain.tsx
+│   │   └── PatientTracking.tsx
 │   └── AssessmentAreas.tsx  # Assessment data
+├── components/
+│   ├── Dashboard/           # Dashboard components
+│   │   └── Dashboard.tsx
+│   ├── Assessment/          # Assessment components
+│   │   └── PatientSelection.tsx
+│   ├── Auth/               # Authentication components
+│   │   ├── LoginForm.tsx
+│   │   └── SignUpForm.tsx
+│   └── Layout/             # Layout components
+│       └── ResponsiveLayout.tsx
+├── services/
+│   └── PatientService.ts   # Patient data management
+├── types/
+│   └── Patient.ts          # TypeScript type definitions
 ├── firebase/               # Firebase configuration
 ├── App.tsx                 # Main app component
 └── main.tsx               # App entry point
@@ -233,6 +280,7 @@ The app can be installed as a Progressive Web App:
 - **No Tracking**: No analytics or tracking scripts
 - **HIPAA Compliance**: Designed with healthcare privacy in mind
 - **Data Control**: Full control over data export and deletion
+- **Patient Data**: Secure patient information with MRN tracking
 
 ## 🤝 Contributing
 
