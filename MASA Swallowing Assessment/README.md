@@ -138,6 +138,17 @@ npm install
 npm run dev
 ```
 
+### Firebase Setup (Recommended)
+1. **Follow the [Firebase Setup Guide](FIREBASE_SETUP.md)**
+2. **Create a `.env.local` file** with your Firebase configuration
+3. **Enable Firestore Database** in your Firebase console
+4. **Set up security rules** for your Firestore database
+
+The app automatically detects Firebase availability and switches between storage methods:
+- **With Firebase**: Data is stored securely in the cloud with automatic sync
+- **Without Firebase**: Data is stored locally in the browser
+- **Migration**: Existing local data is automatically migrated to Firebase when available
+
 ### Firebase Setup (Optional)
 1. Create a Firebase project at [firebase.google.com](https://firebase.google.com)
 2. Copy your Firebase config to `env.example` and rename to `.env.local`

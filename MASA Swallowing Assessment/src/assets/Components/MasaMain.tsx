@@ -7,7 +7,7 @@ import PatientTracking from "./PatientTracking";
 import Dashboard from "../../components/Dashboard/Dashboard";
 import PatientSelection from "../../components/Assessment/PatientSelection";
 import { List as ListIcon, Assessment as AssessmentIcon, Analytics as AnalyticsIcon, Person as PersonIcon, Home as HomeIcon } from "@mui/icons-material";
-import { PatientService } from "../../services/PatientService";
+import { EnhancedPatientService } from "../../services/EnhancedPatientService";
 import { Patient, AssessmentData } from "../../types/Patient";
 
 interface PatientInfo {
@@ -51,9 +51,9 @@ const MasaMain: React.FC = () => {
   const totalAreas = 24; // Total MASA assessment areas
   const progressPercentage = (completedAreas / totalAreas) * 100;
 
-  // Migrate existing data on first load
+  // Initialize enhanced patient service on first load
   useEffect(() => {
-    PatientService.migrateExistingAssessments();
+    EnhancedPatientService.initialize();
   }, []);
 
   const handleLoadAssessment = (assessment: AssessmentData) => {
@@ -279,8 +279,15 @@ const AnalyticsView: React.FC = () => {
   const [assessments, setAssessments] = useState<AssessmentData[]>([]);
 
   useEffect(() => {
-    const savedAssessments = PatientService.getAllAssessments();
-    setAssessments(savedAssessments);
+    const loadAssessments = async () => {
+      try {
+        const savedAssessments = await EnhancedPatientService.getAllAssessments();
+        setAssessments(savedAssessments);
+      } catch (error) {
+        console.error('Error loading assessments:', error);
+      }
+    };
+    loadAssessments();
   }, []);
 
   const getAverageScore = () => {
