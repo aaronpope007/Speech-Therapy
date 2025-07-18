@@ -9,25 +9,52 @@ import {
   Dialog,
   DialogTitle,
   DialogContent,
-  DialogActions
+  DialogActions,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails
 } from '@mui/material';
 import { 
   Cloud as CloudIcon, 
   Storage as StorageIcon,
-  Sync as SyncIcon
+  Sync as SyncIcon,
+  ExpandMore as ExpandMoreIcon
 } from '@mui/icons-material';
 import { EnhancedPatientService } from '../../services/EnhancedPatientService';
+import { FirebaseService } from '../../services/FirebaseService';
 
 const StorageStatus: React.FC = () => {
   const [status, setStatus] = useState(EnhancedPatientService.getStorageStatus());
   const [loading, setLoading] = useState(false);
   const [migrationDialog, setMigrationDialog] = useState(false);
   const [migrationResult, setMigrationResult] = useState<'success' | 'error' | null>(null);
+  const [debugInfo, setDebugInfo] = useState({
+    firebaseAvailable: false,
+    envVars: {
+      apiKey: import.meta.env.VITE_FIREBASE_API_KEY ? 'Set' : 'Not Set',
+      authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN ? 'Set' : 'Not Set',
+      projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID ? 'Set' : 'Not Set',
+      storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET ? 'Set' : 'Not Set',
+      messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID ? 'Set' : 'Not Set',
+      appId: import.meta.env.VITE_FIREBASE_APP_ID ? 'Set' : 'Not Set'
+    }
+  });
 
   useEffect(() => {
     // Update status periodically
     const interval = setInterval(() => {
       setStatus(EnhancedPatientService.getStorageStatus());
+      setDebugInfo({
+        firebaseAvailable: FirebaseService.isAvailable(),
+        envVars: {
+          apiKey: import.meta.env.VITE_FIREBASE_API_KEY ? 'Set' : 'Not Set',
+          authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN ? 'Set' : 'Not Set',
+          projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID ? 'Set' : 'Not Set',
+          storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET ? 'Set' : 'Not Set',
+          messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID ? 'Set' : 'Not Set',
+          appId: import.meta.env.VITE_FIREBASE_APP_ID ? 'Set' : 'Not Set'
+        }
+      });
     }, 5000);
 
     return () => clearInterval(interval);
@@ -93,6 +120,34 @@ const StorageStatus: React.FC = () => {
           />
         )}
       </Box>
+
+      {/* Debug Information */}
+      <Accordion sx={{ mb: 2 }}>
+        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+          <Typography variant="body2">Debug Information</Typography>
+        </AccordionSummary>
+        <AccordionDetails>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+            <Typography variant="body2">
+              <strong>Firebase Available:</strong> {debugInfo.firebaseAvailable ? 'Yes' : 'No'}
+            </Typography>
+            <Typography variant="body2">
+              <strong>Current Storage:</strong> {status.currentMethod}
+            </Typography>
+            <Typography variant="body2">
+              <strong>Migration Completed:</strong> {status.migrationCompleted ? 'Yes' : 'No'}
+            </Typography>
+            <Typography variant="body2" sx={{ mt: 1 }}>
+              <strong>Environment Variables:</strong>
+            </Typography>
+            {Object.entries(debugInfo.envVars).map(([key, value]) => (
+              <Typography key={key} variant="body2" sx={{ ml: 2 }}>
+                {key}: {value}
+              </Typography>
+            ))}
+          </Box>
+        </AccordionDetails>
+      </Accordion>
 
       {/* Migration Dialog */}
       <Dialog open={migrationDialog} onClose={() => setMigrationDialog(false)}>
