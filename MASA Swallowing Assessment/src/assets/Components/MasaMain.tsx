@@ -6,7 +6,7 @@ import AssessmentList from "./AssessmentList";
 import PatientTracking from "./PatientTracking";
 import Dashboard from "../../components/Dashboard/Dashboard";
 import PatientSelection from "../../components/Assessment/PatientSelection";
-import StorageStatus from "../../components/Layout/StorageStatus";
+
 import { List as ListIcon, Assessment as AssessmentIcon, Analytics as AnalyticsIcon, Person as PersonIcon, Home as HomeIcon } from "@mui/icons-material";
 import { EnhancedPatientService } from "../../services/EnhancedPatientService";
 import { Patient, AssessmentData } from "../../types/Patient";
@@ -183,7 +183,6 @@ const MasaMain: React.FC = () => {
         </AppBar>
         
         <Container sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', p: 4, width: '100%', maxWidth: 1200 }}>
-          <StorageStatus />
           {currentView === 'dashboard' ? (
             <Dashboard
               onStartNewAssessment={handleStartNew}
