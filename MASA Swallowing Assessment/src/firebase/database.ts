@@ -46,8 +46,22 @@ export interface AssessmentData {
   encryptedData: string; // Encrypted assessment data
 }
 
+export interface UserData {
+  id: string;
+  username: string;
+  displayName: string;
+  email?: string;
+  role: 'admin' | 'clinician';
+  organization: string;
+  isActive: boolean;
+  lastLogin: Timestamp;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+  encryptedPassword: string; // Encrypted password hash
+}
+
 // Encryption key (in production, this should be stored securely)
-const ENCRYPTION_KEY = process.env.VITE_ENCRYPTION_KEY || 'your-secure-encryption-key-here';
+const ENCRYPTION_KEY = import.meta.env.VITE_ENCRYPTION_KEY || 'your-secure-encryption-key-here';
 
 // Encryption/Decryption utilities
 const encryptData = (data: any): string => {
@@ -230,4 +244,132 @@ export const getDecryptedPatientData = (patient: PatientData): any => {
 
 export const getDecryptedAssessmentData = (assessment: AssessmentData): any => {
   return decryptData(assessment.encryptedData);
+};
+
+// User Management
+export const createUser = async (
+  userData: Omit<UserData, 'id' | 'createdAt' | 'updatedAt' | 'lastLogin' | 'encryptedPassword' | 'isActive'>,
+  password: string
+): Promise<string> => {
+  if (!db) throw new Error('Firebase not initialized');
+
+  const userId = doc(collection(db, 'users')).id;
+  const encryptedPassword = encryptData(password);
+
+  const user: UserData = {
+    ...userData,
+    id: userId,
+    encryptedPassword,
+    isActive: true,
+    lastLogin: serverTimestamp() as Timestamp,
+    createdAt: serverTimestamp() as Timestamp,
+    updatedAt: serverTimestamp() as Timestamp,
+  };
+
+  await setDoc(doc(db, 'users', userId), user);
+  return userId;
+};
+
+export const getUserByUsername = async (username: string): Promise<UserData | null> => {
+  if (!db) throw new Error('Firebase not initialized');
+
+  const q = query(
+    collection(db, 'users'),
+    where('username', '==', username),
+    where('isActive', '==', true)
+  );
+
+  const querySnapshot = await getDocs(q);
+  if (!querySnapshot.empty) {
+    return querySnapshot.docs[0].data() as UserData;
+  }
+  return null;
+};
+
+export const getUserById = async (userId: string): Promise<UserData | null> => {
+  if (!db) throw new Error('Firebase not initialized');
+
+  const docRef = doc(db, 'users', userId);
+  const docSnap = await getDoc(docRef);
+
+  if (docSnap.exists()) {
+    return docSnap.data() as UserData;
+  }
+  return null;
+};
+
+export const getUsersByOrganization = async (organization: string): Promise<UserData[]> => {
+  if (!db) throw new Error('Firebase not initialized');
+
+  const q = query(
+    collection(db, 'users'),
+    where('organization', '==', organization),
+    where('isActive', '==', true),
+    orderBy('createdAt', 'desc')
+  );
+
+  const querySnapshot = await getDocs(q);
+  return querySnapshot.docs.map(doc => doc.data() as UserData);
+};
+
+export const updateUser = async (
+  userId: string,
+  updates: Partial<UserData>
+): Promise<void> => {
+  if (!db) throw new Error('Firebase not initialized');
+
+  const updateData = {
+    ...updates,
+    updatedAt: serverTimestamp(),
+  };
+
+  await updateDoc(doc(db, 'users', userId), updateData);
+};
+
+export const updateUserPassword = async (
+  userId: string,
+  newPassword: string
+): Promise<void> => {
+  if (!db) throw new Error('Firebase not initialized');
+
+  const encryptedPassword = encryptData(newPassword);
+  
+  await updateDoc(doc(db, 'users', userId), {
+    encryptedPassword,
+    updatedAt: serverTimestamp(),
+  });
+};
+
+export const updateUserLastLogin = async (userId: string): Promise<void> => {
+  if (!db) throw new Error('Firebase not initialized');
+
+  await updateDoc(doc(db, 'users', userId), {
+    lastLogin: serverTimestamp(),
+  });
+};
+
+export const deactivateUser = async (userId: string): Promise<void> => {
+  if (!db) throw new Error('Firebase not initialized');
+
+  await updateDoc(doc(db, 'users', userId), {
+    isActive: false,
+    updatedAt: serverTimestamp(),
+  });
+};
+
+export const deleteUser = async (userId: string): Promise<void> => {
+  if (!db) throw new Error('Firebase not initialized');
+
+  await deleteDoc(doc(db, 'users', userId));
+};
+
+// Password verification
+export const verifyUserPassword = (user: UserData, password: string): boolean => {
+  try {
+    const decryptedPassword = decryptData(user.encryptedPassword);
+    return decryptedPassword === password;
+  } catch (error) {
+    console.error('Password verification error:', error);
+    return false;
+  }
 }; 

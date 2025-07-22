@@ -7,7 +7,7 @@ import PatientTracking from "./PatientTracking";
 import Dashboard from "../../components/Dashboard/Dashboard";
 import PatientSelection from "../../components/Assessment/PatientSelection";
 
-import { List as ListIcon, Assessment as AssessmentIcon, Analytics as AnalyticsIcon, Person as PersonIcon, Home as HomeIcon } from "@mui/icons-material";
+import { List as ListIcon, Assessment as AssessmentIcon, Analytics as AnalyticsIcon, Person as PersonIcon, Home as HomeIcon, Logout as LogoutIcon } from "@mui/icons-material";
 import { EnhancedPatientService } from "../../services/EnhancedPatientService";
 import { Patient, AssessmentData } from "../../types/Patient";
 
@@ -30,7 +30,11 @@ const theme = createTheme({
   },
 });
 
-const MasaMain: React.FC = () => {
+interface MasaMainProps {
+  onLogout: () => void;
+}
+
+const MasaMain: React.FC<MasaMainProps> = ({ onLogout }) => {
   const [selectedGrades, setSelectedGrades] = useState<{ [key: number]: number | null }>({});
   const [patientInfo, setPatientInfo] = useState<PatientInfo>({
     name: "",
@@ -179,6 +183,14 @@ const MasaMain: React.FC = () => {
               {getViewTitle()}
             </Typography>
             {getNavigationButton()}
+            <Button
+              color="inherit"
+              onClick={onLogout}
+              startIcon={<LogoutIcon />}
+              sx={{ ml: 2 }}
+            >
+              Logout
+            </Button>
           </Toolbar>
         </AppBar>
         
