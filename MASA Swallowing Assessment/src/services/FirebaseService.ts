@@ -290,8 +290,8 @@ export class FirebaseService {
           ? assessments.reduce((sum, assessment) => {
               const score = Object.values(assessment.selectedGrades)
                 .filter(grade => grade !== null)
-                .reduce((total, grade) => total + (grade || 0), 0);
-              return sum + score;
+                .reduce((total, grade) => (total ?? 0) + (grade ?? 0), 0);
+              return sum + (score ?? 0);
             }, 0) / assessments.length
           : undefined;
 
