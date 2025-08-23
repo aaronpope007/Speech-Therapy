@@ -4,8 +4,7 @@ import {
   getUserByUsername, 
   updateUserPassword, 
   updateUserLastLogin, 
-  verifyUserPassword,
-  UserData 
+  verifyUserPassword
 } from '../firebase/database';
 
 export interface UserCredentials {

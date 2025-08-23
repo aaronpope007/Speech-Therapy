@@ -13,7 +13,6 @@ export class EnhancedPatientService {
     try {
       if (FirebaseService.isAvailable()) {
         this.useFirebase = true;
-        console.log('Using Firebase for data storage');
         
         // Check if we need to migrate from localStorage
         if (!this.migrationCompleted) {
@@ -25,7 +24,6 @@ export class EnhancedPatientService {
         }
       } else {
         this.useFirebase = false;
-        console.log('Using localStorage for data storage');
       }
     } catch (error) {
       console.error('Error initializing EnhancedPatientService:', error);
@@ -45,14 +43,11 @@ export class EnhancedPatientService {
    */
   private static async migrateToFirebase(): Promise<void> {
     try {
-      console.log('Starting data migration to Firebase...');
       await FirebaseService.migrateFromLocalStorage();
       
       // Clear localStorage after successful migration
       localStorage.removeItem('masa-patients');
       localStorage.removeItem('masa-assessments');
-      
-      console.log('Data migration completed successfully');
     } catch (error) {
       console.error('Migration failed, keeping localStorage data:', error);
     }
@@ -219,7 +214,6 @@ export class EnhancedPatientService {
    */
   static switchToLocalStorage(): void {
     this.useFirebase = false;
-    console.log('Switched to localStorage for data storage');
   }
 
   /**
@@ -232,7 +226,6 @@ export class EnhancedPatientService {
     }
     
     this.useFirebase = true;
-    console.log('Switched to Firebase for data storage');
     return true;
   }
 

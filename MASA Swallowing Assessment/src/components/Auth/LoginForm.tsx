@@ -36,8 +36,8 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToSignUp, onLoginSuccess 
     try {
       await signIn(email, password);
       onLoginSuccess();
-    } catch (error: any) {
-      setError(error.message || 'Failed to sign in');
+    } catch (error: unknown) {
+      setError(error instanceof Error ? error.message : 'Failed to sign in');
     } finally {
       setLoading(false);
     }
@@ -55,8 +55,8 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToSignUp, onLoginSuccess 
     try {
       await resetPassword(email);
       setResetSent(true);
-    } catch (error: any) {
-      setError(error.message || 'Failed to send reset email');
+    } catch (error: unknown) {
+      setError(error instanceof Error ? error.message : 'Failed to send reset email');
     } finally {
       setLoading(false);
     }

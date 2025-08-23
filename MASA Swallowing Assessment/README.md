@@ -2,6 +2,12 @@
 
 A comprehensive React application for conducting MASA (Mann Assessment of Swallowing Ability) assessments with automated scoring, patient management, and clinical recommendations.
 
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.2.2-blue.svg)](https://www.typescriptlang.org/)
+[![React](https://img.shields.io/badge/React-18.2.0-blue.svg)](https://reactjs.org/)
+[![Material-UI](https://img.shields.io/badge/Material--UI-5.15.15-blue.svg)](https://mui.com/)
+[![Firebase](https://img.shields.io/badge/Firebase-11.10.0-orange.svg)](https://firebase.google.com/)
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+
 ## 🚀 Features
 
 ### 🏥 Patient Management System

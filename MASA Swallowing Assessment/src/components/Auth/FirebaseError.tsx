@@ -10,8 +10,7 @@ import {
   Divider
 } from '@mui/material';
 import { 
-  Error as ErrorIcon,
-  Settings as SettingsIcon
+  Error as ErrorIcon
 } from '@mui/icons-material';
 
 const FirebaseError: React.FC = () => {

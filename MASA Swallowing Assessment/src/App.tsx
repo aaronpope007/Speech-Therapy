@@ -3,7 +3,7 @@ import "@fontsource/roboto/300.css";
 import "@fontsource/roboto/400.css";
 import "@fontsource/roboto/500.css";
 import "@fontsource/roboto/700.css";
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Box, CircularProgress } from '@mui/material';
 import MasaMain from "./assets/Components/MasaMain";
 import LoginModal from "./components/Auth/LoginModal";
@@ -15,7 +15,6 @@ import AuthService, { AuthUser } from "./services/AuthService";
 // Can display longer (verbose) text on hover or something
 
 function App() {
-  console.log('App: Component rendering...');
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [showLoginModal, setShowLoginModal] = useState(false);
@@ -24,37 +23,27 @@ function App() {
 
   useEffect(() => {
     const checkAuthState = async () => {
-      console.log('App: Starting auth state check...');
       try {
         const authService = AuthService.getInstance();
-        console.log('App: AuthService instance created');
         authService.initialize();
-        console.log('App: AuthService initialized');
         const currentUser = authService.getCurrentUser();
-        console.log('App: Current user:', currentUser);
         setUser(currentUser);
         
         // If no user is logged in, check if we need setup
         if (!currentUser) {
-          console.log('App: No current user, showing setup');
           // For now, we'll show setup if no user is logged in
           // In a real app, you might want to check if any users exist in Firebase
           setNeedsSetup(true);
-        } else {
-          console.log('App: User found, showing main app');
         }
       } catch (error) {
         console.error('App: Auth state check failed:', error);
         // If Firebase is not configured, show error message
         if (error instanceof Error && error.message.includes('Firebase not initialized')) {
-          console.log('App: Firebase not configured, showing error');
           setFirebaseError(true);
         } else {
-          console.log('App: Other error, showing setup');
           setNeedsSetup(true);
         }
       } finally {
-        console.log('App: Setting loading to false');
         setLoading(false);
       }
     };
@@ -93,8 +82,6 @@ function App() {
     );
   }
 
-  console.log('App: Render state - user:', !!user, 'loading:', loading, 'needsSetup:', needsSetup, 'firebaseError:', firebaseError);
-  
   return (
     <>
       {user ? (
