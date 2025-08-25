@@ -6,65 +6,58 @@ import "@fontsource/roboto/700.css";
 import { useState, useEffect } from 'react';
 import { Box, CircularProgress } from '@mui/material';
 import MasaMain from "./assets/Components/MasaMain";
-import LoginModal from "./components/Auth/LoginModal";
-import SetupUsers from "./components/Auth/SetupUsers";
+import UnifiedAuth from "./components/Auth/UnifiedAuth";
+
 import FirebaseError from "./components/Auth/FirebaseError";
 import AuthService, { AuthUser } from "./services/AuthService";
-
-// When vanilla is completed, make another, short form app with button groups in MUI to select.
-// Can display longer (verbose) text on hover or something
 
 function App() {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
-  const [showLoginModal, setShowLoginModal] = useState(false);
-  const [needsSetup, setNeedsSetup] = useState(false);
   const [firebaseError, setFirebaseError] = useState(false);
 
   useEffect(() => {
-    const checkAuthState = async () => {
+    const initializeAuth = async () => {
       try {
         const authService = AuthService.getInstance();
-        authService.initialize();
-        const currentUser = authService.getCurrentUser();
-        setUser(currentUser);
+        await authService.initialize();
         
-        // If no user is logged in, check if we need setup
-        if (!currentUser) {
-          // For now, we'll show setup if no user is logged in
-          // In a real app, you might want to check if any users exist in Firebase
-          setNeedsSetup(true);
-        }
+        // Set up auth state listener
+        const unsubscribe = authService.onAuthStateChange((user) => {
+          setUser(user);
+          setLoading(false);
+        });
+        
+        // Cleanup on unmount
+        return () => {
+          unsubscribe();
+          authService.destroy();
+        };
       } catch (error) {
-        console.error('App: Auth state check failed:', error);
-        // If Firebase is not configured, show error message
+        console.error('App: Auth initialization failed:', error);
         if (error instanceof Error && error.message.includes('Firebase not initialized')) {
           setFirebaseError(true);
-        } else {
-          setNeedsSetup(true);
         }
-      } finally {
         setLoading(false);
       }
     };
 
-    checkAuthState();
+    initializeAuth();
   }, []);
 
-  const handleSetupComplete = () => {
-    setNeedsSetup(false);
-    setShowLoginModal(true);
+  const handleLogout = async () => {
+    try {
+      const authService = AuthService.getInstance();
+      await authService.logout();
+      setUser(null);
+    } catch (error) {
+      console.error('Logout failed:', error);
+      // Even if logout fails, clear the user state
+      setUser(null);
+    }
   };
 
-  const handleLoginSuccess = (user: AuthUser) => {
-    setUser(user);
-    setShowLoginModal(false);
-  };
 
-  const handleLogout = () => {
-    setUser(null);
-    setShowLoginModal(true);
-  };
 
   if (loading) {
     return (
@@ -82,30 +75,16 @@ function App() {
     );
   }
 
+  if (firebaseError) {
+    return <FirebaseError />;
+  }
+
   return (
     <>
       {user ? (
         <MasaMain onLogout={handleLogout} />
-      ) : firebaseError ? (
-        <FirebaseError />
-      ) : needsSetup ? (
-        <SetupUsers onSetupComplete={handleSetupComplete} />
       ) : (
-        <Box
-          sx={{
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            minHeight: '100vh',
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
-          }}
-        >
-          <LoginModal
-            open={showLoginModal}
-            onClose={() => setShowLoginModal(false)}
-            onLoginSuccess={handleLoginSuccess}
-          />
-        </Box>
+        <UnifiedAuth />
       )}
     </>
   );

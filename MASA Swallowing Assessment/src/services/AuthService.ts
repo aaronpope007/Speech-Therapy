@@ -10,7 +10,12 @@ import {
   updateUserRole,
   toggleUserStatus,
   AuthUser,
-  UserProfile
+  UserProfile,
+  sendEmailLink,
+  isEmailLink,
+  signInWithEmailLink,
+  createUserWithEmailLink,
+  completeUserCreation
 } from '../firebase/auth';
 
 export interface UserCredentials {
@@ -60,6 +65,39 @@ class AuthService {
   // Get current user
   getCurrentUser(): AuthUser | null {
     return this.currentUser;
+  }
+
+  // Email link authentication methods
+  async sendEmailLink(email: string): Promise<void> {
+    await sendEmailLink(email);
+  }
+
+  isEmailLink(): boolean {
+    return isEmailLink();
+  }
+
+  async signInWithEmailLink(): Promise<AuthUser> {
+    const user = await signInWithEmailLink();
+    this.currentUser = user;
+    return user;
+  }
+
+  async createUserWithEmailLink(
+    email: string,
+    profile: Omit<UserProfile, 'uid' | 'email' | 'createdAt' | 'lastLogin' | 'isActive'>
+  ): Promise<void> {
+    await createUserWithEmailLink(email, profile);
+  }
+
+  async completeUserCreation(): Promise<AuthUser> {
+    const user = await completeUserCreation();
+    this.currentUser = user;
+    return user;
+  }
+
+  // Set up auth state change listener
+  onAuthStateChange(callback: (user: AuthUser | null) => void): () => void {
+    return onAuthStateChange(callback);
   }
 
   // Sign in with email and password

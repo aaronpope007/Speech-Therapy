@@ -5,7 +5,11 @@ import {
   onAuthStateChanged,
   sendPasswordResetEmail,
   updateProfile,
-  AuthError
+  AuthError,
+  sendSignInLinkToEmail,
+  isSignInWithEmailLink,
+  signInWithEmailLink as firebaseSignInWithEmailLink,
+  ActionCodeSettings
 } from 'firebase/auth';
 import { 
   doc, 
@@ -120,7 +124,177 @@ export const updateUserProfile = async (
   });
 };
 
-// Sign in with email and password
+// Email link sign-in configuration
+const actionCodeSettings: ActionCodeSettings = {
+  // URL you want to redirect back to. The domain (www.example.com) for this
+  // URL must be whitelisted in the Firebase Console.
+  url: window.location.origin + '/auth/verify',
+  // This must be true
+  handleCodeInApp: true,
+  iOS: {
+    bundleId: 'com.masa.swallowingassessment'
+  },
+  android: {
+    packageName: 'com.masa.swallowingassessment',
+    installApp: true,
+    minimumVersion: '12'
+  },
+  // Dynamic link domain for mobile apps
+  dynamicLinkDomain: 'your-dynamic-link-domain.page.link' // You'll need to set this up
+};
+
+// Send email link for sign-in
+export const sendEmailLink = async (email: string): Promise<void> => {
+  if (!auth) throw new Error('Firebase not initialized');
+  
+  try {
+    await sendSignInLinkToEmail(auth, email, actionCodeSettings);
+    
+    // Save the email for later use
+    window.localStorage.setItem('emailForSignIn', email);
+  } catch (error) {
+    const authError = error as AuthError;
+    console.error('Send email link error:', authError);
+    
+    switch (authError.code) {
+      case 'auth/invalid-email':
+        throw new Error('Please enter a valid email address');
+      case 'auth/user-not-found':
+        throw new Error('No account found with this email address');
+      default:
+        throw new Error('Failed to send sign-in link. Please try again.');
+    }
+  }
+};
+
+// Check if the current URL is a sign-in link
+export const isEmailLink = (): boolean => {
+  if (!auth) return false;
+  return isSignInWithEmailLink(auth, window.location.href);
+};
+
+// Complete sign-in with email link
+export const signInWithEmailLink = async (): Promise<AuthUser> => {
+  if (!auth) throw new Error('Firebase not initialized');
+  
+  try {
+    // Get the email from localStorage
+    const email = window.localStorage.getItem('emailForSignIn');
+    if (!email) {
+      throw new Error('Email not found. Please request a new sign-in link.');
+    }
+    
+    // Sign in with the email link
+    const userCredential = await firebaseSignInWithEmailLink(auth, email, window.location.href);
+    const user = userCredential.user;
+    
+    // Clear the email from localStorage
+    window.localStorage.removeItem('emailForSignIn');
+    
+    // Get user profile
+    const profile = await getUserProfile(user.uid);
+    
+    // Update last login
+    await updateUserProfile(user.uid, { lastLogin: new Date().toISOString() });
+    
+    return {
+      ...profile,
+      emailVerified: user.emailVerified
+    };
+  } catch (error) {
+    const authError = error as AuthError;
+    console.error('Sign in with email link error:', authError);
+    
+    switch (authError.code) {
+      case 'auth/invalid-action-code':
+        throw new Error('Invalid or expired sign-in link. Please request a new one.');
+      case 'auth/user-disabled':
+        throw new Error('This account has been disabled');
+      default:
+        throw new Error('Failed to sign in. Please try again.');
+    }
+  }
+};
+
+// Create new user with email link
+export const createUserWithEmailLink = async (
+  email: string,
+  profile: Omit<UserProfile, 'uid' | 'email' | 'createdAt' | 'lastLogin' | 'isActive'>
+): Promise<void> => {
+  if (!auth) throw new Error('Firebase not initialized');
+  
+  try {
+    await sendSignInLinkToEmail(auth, email, actionCodeSettings);
+    
+    // Save the email and profile data for later use
+    window.localStorage.setItem('emailForSignIn', email);
+    window.localStorage.setItem('pendingUserProfile', JSON.stringify(profile));
+  } catch (error) {
+    const authError = error as AuthError;
+    console.error('Create user with email link error:', authError);
+    
+    switch (authError.code) {
+      case 'auth/invalid-email':
+        throw new Error('Please enter a valid email address');
+      case 'auth/email-already-in-use':
+        throw new Error('An account with this email already exists');
+      default:
+        throw new Error('Failed to send sign-in link. Please try again.');
+    }
+  }
+};
+
+// Complete user creation with email link
+export const completeUserCreation = async (): Promise<AuthUser> => {
+  if (!auth) throw new Error('Firebase not initialized');
+  
+  try {
+    // Get the email and profile data from localStorage
+    const email = window.localStorage.getItem('emailForSignIn');
+    const profileData = window.localStorage.getItem('pendingUserProfile');
+    
+    if (!email || !profileData) {
+      throw new Error('Sign-in data not found. Please try again.');
+    }
+    
+    const profile = JSON.parse(profileData);
+    
+    // Sign in with the email link
+    const userCredential = await firebaseSignInWithEmailLink(auth, email, window.location.href);
+    const user = userCredential.user;
+    
+    // Create user profile in Firestore
+    await createUserProfile(user.uid, {
+      ...profile,
+      email,
+      isActive: true
+    });
+    
+    // Clear localStorage
+    window.localStorage.removeItem('emailForSignIn');
+    window.localStorage.removeItem('pendingUserProfile');
+    
+    // Get the created profile
+    const userProfile = await getUserProfile(user.uid);
+    
+    return {
+      ...userProfile,
+      emailVerified: user.emailVerified
+    };
+  } catch (error) {
+    const authError = error as AuthError;
+    console.error('Complete user creation error:', authError);
+    
+    switch (authError.code) {
+      case 'auth/invalid-action-code':
+        throw new Error('Invalid or expired sign-in link. Please request a new one.');
+      default:
+        throw new Error('Failed to create account. Please try again.');
+    }
+  }
+};
+
+// Legacy password-based sign-in (kept for fallback)
 export const signIn = async (email: string, password: string): Promise<AuthUser> => {
   if (!auth) throw new Error('Firebase not initialized');
   
@@ -158,7 +332,7 @@ export const signIn = async (email: string, password: string): Promise<AuthUser>
   }
 };
 
-// Sign up with email and password
+// Legacy sign-up (kept for fallback)
 export const signUp = async (
   email: string, 
   password: string, 
@@ -219,7 +393,7 @@ export const signOutUser = async (): Promise<void> => {
   }
 };
 
-// Reset password
+// Reset password (kept for fallback)
 export const resetPassword = async (email: string): Promise<void> => {
   if (!auth) throw new Error('Firebase not initialized');
   
