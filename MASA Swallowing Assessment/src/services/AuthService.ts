@@ -1,33 +1,43 @@
-import { signOutUser } from '../firebase/auth';
 import { 
-  createUser, 
-  getUserByUsername, 
-  updateUserPassword, 
-  updateUserLastLogin, 
-  verifyUserPassword
-} from '../firebase/database';
+  signIn, 
+  signUp, 
+  signOutUser, 
+  resetPassword, 
+  getAuthState, 
+  onAuthStateChange,
+  hasRole,
+  getAllUsers,
+  updateUserRole,
+  toggleUserStatus,
+  AuthUser,
+  UserProfile
+} from '../firebase/auth';
 
 export interface UserCredentials {
-  username: string;
+  email: string;
   password: string;
 }
 
-export interface AuthUser {
-  uid: string;
-  username: string;
+export interface SignUpData {
+  email: string;
+  password: string;
   displayName: string;
   role: 'clinician' | 'admin';
   organization: string;
-  createdAt: string;
-  lastLogin: string;
-  isActive: boolean;
+  username?: string;
 }
 
 class AuthService {
   private static instance: AuthService;
   private currentUser: AuthUser | null = null;
+  private unsubscribe: (() => void) | null = null;
 
-  private constructor() {}
+  private constructor() {
+    // Set up auth state listener
+    this.unsubscribe = onAuthStateChange((user) => {
+      this.currentUser = user;
+    });
+  }
 
   static getInstance(): AuthService {
     if (!AuthService.instance) {
@@ -36,183 +46,144 @@ class AuthService {
     return AuthService.instance;
   }
 
-  // Initialize default users in Firebase (run once for setup)
-  async initializeDefaultUsers(): Promise<void> {
+  // Initialize the auth service
+  async initialize(): Promise<void> {
     try {
-      const defaultUsers = [
-        {
-          username: 'admin',
-          displayName: 'Administrator',
-          role: 'admin' as const,
-          organization: 'MASA Clinic',
-          password: 'admin123'
-        },
-        {
-          username: 'clinician',
-          displayName: 'Speech Therapist',
-          role: 'clinician' as const,
-          organization: 'MASA Clinic',
-          password: 'clinician123'
-        }
-      ];
-
-      for (const userData of defaultUsers) {
-        // Check if user already exists
-        const existingUser = await getUserByUsername(userData.username);
-        if (!existingUser) {
-          await createUser({
-            username: userData.username,
-            displayName: userData.displayName,
-            role: userData.role,
-            organization: userData.organization
-          }, userData.password);
-          console.log(`Created default user: ${userData.username}`);
-        }
-      }
+      // Get current auth state
+      this.currentUser = await getAuthState();
     } catch (error) {
-      console.error('Error initializing default users:', error);
+      console.error('Error initializing AuthService:', error);
+      this.currentUser = null;
     }
   }
 
-  // Authenticate user with username and password
+  // Get current user
+  getCurrentUser(): AuthUser | null {
+    return this.currentUser;
+  }
+
+  // Sign in with email and password
   async authenticate(credentials: UserCredentials): Promise<AuthUser> {
     try {
-      const userData = await getUserByUsername(credentials.username);
-      
-      if (!userData) {
-        throw new Error('Invalid username or password');
-      }
-
-      if (!userData.isActive) {
-        throw new Error('Account is deactivated');
-      }
-
-      if (!verifyUserPassword(userData, credentials.password)) {
-        throw new Error('Invalid username or password');
-      }
-
-      // Update last login
-      await updateUserLastLogin(userData.id);
-
-      // Convert UserData to AuthUser
-      const authUser: AuthUser = {
-        uid: userData.id,
-        username: userData.username,
-        displayName: userData.displayName,
-        role: userData.role,
-        organization: userData.organization,
-        createdAt: userData.createdAt.toDate().toISOString(),
-        lastLogin: userData.lastLogin.toDate().toISOString(),
-        isActive: userData.isActive
-      };
-
-      // Store user in localStorage for persistence
-      localStorage.setItem('masa_current_user', JSON.stringify(authUser));
-      
-      this.currentUser = authUser;
-      return authUser;
+      const user = await signIn(credentials.email, credentials.password);
+      this.currentUser = user;
+      return user;
     } catch (error) {
       console.error('Authentication error:', error);
       throw error;
     }
   }
 
-  // Get current authenticated user
-  getCurrentUser(): AuthUser | null {
-    if (this.currentUser) {
-      return this.currentUser;
-    }
-
-    // Try to get from localStorage
-    const storedUser = localStorage.getItem('masa_current_user');
-    if (storedUser) {
-      try {
-        this.currentUser = JSON.parse(storedUser);
-        return this.currentUser;
-      } catch (error) {
-        console.error('Error parsing stored user:', error);
-        localStorage.removeItem('masa_current_user');
-      }
-    }
-
-    return null;
-  }
-
-  // Change password for current user
-  async changePassword(newPassword: string): Promise<void> {
-    const user = this.getCurrentUser();
-    if (!user) {
-      throw new Error('No user is currently authenticated');
-    }
-
+  // Sign up new user
+  async signUp(data: SignUpData): Promise<AuthUser> {
     try {
-      await updateUserPassword(user.uid, newPassword);
-      
-      // Update the user's last login to indicate password change
-      user.lastLogin = new Date().toISOString();
-      localStorage.setItem('masa_current_user', JSON.stringify(user));
-      
-      console.log('Password changed successfully for user:', user.username);
+      const user = await signUp(data.email, data.password, {
+        displayName: data.displayName,
+        role: data.role,
+        organization: data.organization,
+        username: data.username
+      });
+      this.currentUser = user;
+      return user;
     } catch (error) {
-      console.error('Error changing password:', error);
-      throw new Error('Failed to change password');
+      console.error('Sign up error:', error);
+      throw error;
     }
   }
 
-  // Logout current user
+  // Sign out
   async logout(): Promise<void> {
-    this.currentUser = null;
-    localStorage.removeItem('masa_current_user');
-    
-    // Also try to logout from Firebase if available
     try {
       await signOutUser();
+      this.currentUser = null;
     } catch (error) {
-      // Firebase logout failed, but that's okay for local auth
-      console.log('Firebase logout failed, but local logout successful');
+      console.error('Logout error:', error);
+      // Even if Firebase logout fails, clear local state
+      this.currentUser = null;
+      throw error;
     }
+  }
+
+  // Reset password
+  async resetPassword(email: string): Promise<void> {
+    try {
+      await resetPassword(email);
+    } catch (error) {
+      console.error('Password reset error:', error);
+      throw error;
+    }
+  }
+
+  // Check if user has required role
+  hasRole(requiredRole: 'clinician' | 'admin'): boolean {
+    return hasRole(this.currentUser, requiredRole);
   }
 
   // Check if user is authenticated
   isAuthenticated(): boolean {
-    return this.getCurrentUser() !== null;
+    return this.currentUser !== null && this.currentUser.isActive;
   }
 
-  // Get user role
-  getUserRole(): 'clinician' | 'admin' | null {
-    const user = this.getCurrentUser();
-    return user ? user.role : null;
+  // Check if user is admin
+  isAdmin(): boolean {
+    return this.hasRole('admin');
   }
 
-  // Initialize auth service
-  initialize(): void {
-    // Check for existing session
-    this.getCurrentUser();
+  // Check if user is clinician
+  isClinician(): boolean {
+    return this.hasRole('clinician');
   }
 
-  // Create a new user (admin only)
-  async createNewUser(
-    username: string,
-    displayName: string,
-    role: 'admin' | 'clinician',
-    organization: string,
-    password: string
-  ): Promise<string> {
+  // Get all users (admin only)
+  async getAllUsers(): Promise<UserProfile[]> {
+    if (!this.isAdmin()) {
+      throw new Error('Access denied. Admin privileges required.');
+    }
+    
     try {
-      const userId = await createUser({
-        username,
-        displayName,
-        role,
-        organization
-      }, password);
-      
-      console.log(`Created new user: ${username}`);
-      return userId;
+      return await getAllUsers();
     } catch (error) {
-      console.error('Error creating user:', error);
-      throw new Error('Failed to create user');
+      console.error('Error fetching users:', error);
+      throw error;
+    }
+  }
+
+  // Update user role (admin only)
+  async updateUserRole(uid: string, role: 'clinician' | 'admin'): Promise<void> {
+    if (!this.isAdmin()) {
+      throw new Error('Access denied. Admin privileges required.');
+    }
+    
+    try {
+      await updateUserRole(uid, role);
+    } catch (error) {
+      console.error('Error updating user role:', error);
+      throw error;
+    }
+  }
+
+  // Toggle user status (admin only)
+  async toggleUserStatus(uid: string, isActive: boolean): Promise<void> {
+    if (!this.isAdmin()) {
+      throw new Error('Access denied. Admin privileges required.');
+    }
+    
+    try {
+      await toggleUserStatus(uid, isActive);
+    } catch (error) {
+      console.error('Error toggling user status:', error);
+      throw error;
+    }
+  }
+
+  // Cleanup
+  destroy(): void {
+    if (this.unsubscribe) {
+      this.unsubscribe();
+      this.unsubscribe = null;
     }
   }
 }
 
-export default AuthService; 
+export default AuthService;
+export type { AuthUser, UserProfile }; 

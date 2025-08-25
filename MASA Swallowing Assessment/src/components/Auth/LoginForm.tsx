@@ -24,7 +24,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToSignUp, onLoginSuccess 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [resetSent, setResetSent] = useState(false);
-  
+
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
@@ -135,7 +135,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToSignUp, onLoginSuccess 
             variant="contained"
             size="large"
             disabled={loading}
-            sx={{ mb: 2, py: 1.5 }}
+            sx={{ mb: 2 }}
           >
             {loading ? <CircularProgress size={24} /> : 'Sign In'}
           </Button>
@@ -148,7 +148,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToSignUp, onLoginSuccess 
               disabled={loading}
               sx={{ cursor: 'pointer' }}
             >
-              Forgot password?
+              Forgot your password?
             </Link>
           </Box>
 

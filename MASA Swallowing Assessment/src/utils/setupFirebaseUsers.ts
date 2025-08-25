@@ -1,40 +1,66 @@
-import AuthService from '../services/AuthService';
+import { signUp } from '../firebase/auth';
 
-/**
- * Setup script to initialize default users in Firebase
- * Run this once when setting up the application for the first time
- */
+interface DefaultUser {
+  email: string;
+  password: string;
+  displayName: string;
+  role: 'clinician' | 'admin';
+  organization: string;
+  username?: string;
+}
+
+const defaultUsers: DefaultUser[] = [
+  {
+    email: 'admin@masa.com',
+    password: 'admin123',
+    displayName: 'Administrator',
+    role: 'admin',
+    organization: 'MASA Clinic',
+    username: 'admin'
+  },
+  {
+    email: 'clinician@masa.com',
+    password: 'clinician123',
+    displayName: 'Speech Therapist',
+    role: 'clinician',
+    organization: 'MASA Clinic',
+    username: 'clinician'
+  }
+];
+
 export const setupDefaultUsers = async (): Promise<void> => {
+  console.log('Setting up default users in Firebase...');
+  
   try {
-    console.log('Setting up default users in Firebase...');
-    
-    const authService = AuthService.getInstance();
-    await authService.initializeDefaultUsers();
+    for (const userData of defaultUsers) {
+      try {
+        // Create user with Firebase Auth
+        await signUp(userData.email, userData.password, {
+          displayName: userData.displayName,
+          role: userData.role,
+          organization: userData.organization,
+          username: userData.username
+        });
+        
+        console.log(`✅ Created user: ${userData.email} (${userData.role})`);
+      } catch (error: unknown) {
+        if (error instanceof Error && 'code' in error && error.code === 'auth/email-already-in-use') {
+          console.log(`⚠️  User already exists: ${userData.email}`);
+        } else {
+          console.error(`❌ Failed to create user ${userData.email}:`, error instanceof Error ? error.message : 'Unknown error');
+        }
+      }
+    }
     
     console.log('Default users setup completed successfully!');
     console.log('Default credentials:');
-    console.log('- Admin: admin / admin123');
-    console.log('- Clinician: clinician / clinician123');
+    console.log('- Admin: admin@masa.com / admin123');
+    console.log('- Clinician: clinician@masa.com / clinician123');
   } catch (error) {
     console.error('Error setting up default users:', error);
     throw error;
   }
 };
 
-/**
- * Function to be called from the browser console or a setup page
- */
-export const runSetup = async (): Promise<void> => {
-  try {
-    await setupDefaultUsers();
-    alert('Default users setup completed! You can now login with admin/admin123 or clinician/clinician123');
-  } catch (error) {
-    console.error('Setup failed:', error);
-    alert('Setup failed. Check console for details.');
-  }
-};
-
-// Make it available globally for console access
-if (typeof window !== 'undefined') {
-  (window as any).setupMasaUsers = runSetup;
-} 
+// Export for use in setup components
+export default setupDefaultUsers; 

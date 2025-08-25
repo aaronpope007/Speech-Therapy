@@ -31,51 +31,66 @@ const SignUpForm: React.FC<SignUpFormProps> = ({ onSwitchToLogin, onSignUpSucces
     displayName: '',
     organization: '',
     role: 'clinician' as 'clinician' | 'admin',
+    username: ''
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  
+
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
-  const handleChange = (field: string) => (e: React.ChangeEvent<HTMLInputElement | { value: unknown }>) => {
+  const handleInputChange = (field: keyof typeof formData) => (
+    e: React.ChangeEvent<HTMLInputElement | { value: unknown }> | SelectChangeEvent
+  ) => {
     setFormData(prev => ({
       ...prev,
       [field]: e.target.value
     }));
   };
 
-  const handleSelectChange = (e: SelectChangeEvent<'clinician' | 'admin'>) => {
-    setFormData(prev => ({
-      ...prev,
-      role: e.target.value as 'clinician' | 'admin'
-    }));
+  const validateForm = (): string | null => {
+    if (!formData.email || !formData.password || !formData.displayName || !formData.organization) {
+      return 'Please fill in all required fields';
+    }
+    
+    if (formData.password.length < 6) {
+      return 'Password must be at least 6 characters long';
+    }
+    
+    if (formData.password !== formData.confirmPassword) {
+      return 'Passwords do not match';
+    }
+    
+    if (!formData.email.includes('@')) {
+      return 'Please enter a valid email address';
+    }
+    
+    return null;
   };
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    const validationError = validateForm();
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+
     setLoading(true);
     setError('');
 
-    // Validation
-    if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match');
-      setLoading(false);
-      return;
-    }
-
-    if (formData.password.length < 6) {
-      setError('Password must be at least 6 characters long');
-      setLoading(false);
-      return;
-    }
-
     try {
-      await signUp(formData.email, formData.password, formData.displayName);
+      await signUp(formData.email, formData.password, {
+        displayName: formData.displayName,
+        role: formData.role,
+        organization: formData.organization,
+        username: formData.username || undefined
+      });
+      
       onSignUpSuccess();
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to create account';
-      setError(errorMessage);
+      setError(error instanceof Error ? error.message : 'Failed to create account');
     } finally {
       setLoading(false);
     }
@@ -106,7 +121,7 @@ const SignUpForm: React.FC<SignUpFormProps> = ({ onSwitchToLogin, onSignUpSucces
             Create Account
           </Typography>
           <Typography variant="body1" color="text.secondary">
-            Join MASA Assessment platform
+            Sign up for MASA Assessment access
           </Typography>
         </Box>
 
@@ -119,25 +134,25 @@ const SignUpForm: React.FC<SignUpFormProps> = ({ onSwitchToLogin, onSignUpSucces
         <form onSubmit={handleSignUp}>
           <TextField
             fullWidth
-            label="Full Name"
-            value={formData.displayName}
-            onChange={handleChange('displayName')}
-            margin="normal"
-            required
-            autoComplete="name"
-            autoFocus
-            sx={{ mb: 2 }}
-          />
-
-          <TextField
-            fullWidth
             label="Email"
             type="email"
             value={formData.email}
-            onChange={handleChange('email')}
+            onChange={handleInputChange('email')}
             margin="normal"
             required
             autoComplete="email"
+            autoFocus
+            sx={{ mb: 2 }}
+          />
+          
+          <TextField
+            fullWidth
+            label="Full Name"
+            value={formData.displayName}
+            onChange={handleInputChange('displayName')}
+            margin="normal"
+            required
+            autoComplete="name"
             sx={{ mb: 2 }}
           />
 
@@ -145,10 +160,10 @@ const SignUpForm: React.FC<SignUpFormProps> = ({ onSwitchToLogin, onSignUpSucces
             fullWidth
             label="Organization"
             value={formData.organization}
-            onChange={handleChange('organization')}
+            onChange={handleInputChange('organization')}
             margin="normal"
             required
-            placeholder="Hospital, Clinic, or Practice Name"
+            placeholder="e.g., MASA Clinic, Hospital Name"
             sx={{ mb: 2 }}
           />
 
@@ -157,22 +172,33 @@ const SignUpForm: React.FC<SignUpFormProps> = ({ onSwitchToLogin, onSignUpSucces
             <Select
               value={formData.role}
               label="Role"
-              onChange={handleSelectChange}
+              onChange={handleInputChange('role')}
             >
-              <MenuItem value="clinician">Clinician</MenuItem>
+              <MenuItem value="clinician">Speech Language Pathologist</MenuItem>
               <MenuItem value="admin">Administrator</MenuItem>
             </Select>
           </FormControl>
 
           <TextField
             fullWidth
+            label="Username (Optional)"
+            value={formData.username}
+            onChange={handleInputChange('username')}
+            margin="normal"
+            placeholder="Choose a username for login"
+            sx={{ mb: 2 }}
+          />
+          
+          <TextField
+            fullWidth
             label="Password"
             type="password"
             value={formData.password}
-            onChange={handleChange('password')}
+            onChange={handleInputChange('password')}
             margin="normal"
             required
             autoComplete="new-password"
+            helperText="Password must be at least 6 characters long"
             sx={{ mb: 2 }}
           />
 
@@ -181,7 +207,7 @@ const SignUpForm: React.FC<SignUpFormProps> = ({ onSwitchToLogin, onSignUpSucces
             label="Confirm Password"
             type="password"
             value={formData.confirmPassword}
-            onChange={handleChange('confirmPassword')}
+            onChange={handleInputChange('confirmPassword')}
             margin="normal"
             required
             autoComplete="new-password"
@@ -194,7 +220,7 @@ const SignUpForm: React.FC<SignUpFormProps> = ({ onSwitchToLogin, onSignUpSucces
             variant="contained"
             size="large"
             disabled={loading}
-            sx={{ mb: 2, py: 1.5 }}
+            sx={{ mb: 2 }}
           >
             {loading ? <CircularProgress size={24} /> : 'Create Account'}
           </Button>
