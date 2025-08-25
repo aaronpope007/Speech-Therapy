@@ -112,16 +112,17 @@ import('./src/utils/setupFirebaseUsers.js').then(module => {
 ```
 
 ### 4.2 Default User Credentials
+
 After running the setup, you'll have these default users:
 
 - **Admin User**:
-  - Email: `admin@masa.com`
-  - Password: `admin123`
+  - Email: `admin@masa.com` (or value from VITE_ADMIN_EMAIL)
+  - Password: Configured via VITE_ADMIN_PASSWORD environment variable
   - Role: Administrator
 
 - **Clinician User**:
-  - Email: `clinician@masa.com`
-  - Password: `clinician123`
+  - Email: `clinician@masa.com` (or value from VITE_CLINICIAN_EMAIL)
+  - Password: Configured via VITE_CLINICIAN_PASSWORD environment variable
   - Role: Speech Language Pathologist
 
 ## 🔧 **Step 5: Test Authentication**

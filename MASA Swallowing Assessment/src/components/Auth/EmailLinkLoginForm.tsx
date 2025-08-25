@@ -177,6 +177,10 @@ const EmailLinkLoginForm: React.FC<EmailLinkLoginFormProps> = ({
             <strong>How it works:</strong> Enter your email and we'll send you a secure sign-in link. 
             Click the link in your email to access your account. No password needed!
           </Typography>
+          <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
+            <strong>Note:</strong> Email links expire after 15 minutes for security. 
+            If you're on a mobile device, make sure to open the link in your browser.
+          </Typography>
         </Box>
       </Paper>
     </Box>

@@ -14,12 +14,12 @@
 7. **Copy Config**: You'll see a config object like this:
    ```javascript
    const firebaseConfig = {
-     apiKey: "AIzaSyC...",
+     apiKey: "YOUR_API_KEY_HERE",
      authDomain: "your-project.firebaseapp.com",
      projectId: "your-project-id",
      storageBucket: "your-project.appspot.com",
      messagingSenderId: "123456789",
-     appId: "1:123456789:web:abc123"
+     appId: "your-app-id"
    };
    ```
 

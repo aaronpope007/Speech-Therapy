@@ -19,7 +19,56 @@ dist-ssr
 .env.test.local
 .env.production.local
 
-# Editor directories and files
+# Additional environment files
+.env.*
+!.env.example
+
+# Firebase configuration files
+firebase-debug.log
+firebase-debug.*.log
+.firebase/
+firebase-export-*
+firebase-import-export-*
+firebase-export-*.json
+firebase-import-export-*.json
+
+# Service account keys and credentials
+serviceAccountKey.json
+service-account-key.json
+firebase-service-account.json
+google-credentials.json
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Healthcare/PHI related files
+patient-data/
+patient-exports/
+*.csv
+*.xlsx
+*.xls
+healthcare-data/
+phi-data/
+patient-reports/
+
+# Backup and temporary files
+backup/
+backups/
+*.bak
+*.backup
+*.old
+*.orig
+
+# Local development files
+local/
+dev/
+development/
+*.local.js
+*.local.ts
+*.local.json
+
+# IDE and editor files
 .vscode/*
 !.vscode/extensions.json
 .idea
@@ -87,3 +136,30 @@ jspm_packages/
 # Temporary folders
 tmp/
 temp/
+
+# Security and encryption files
+*.enc
+*.encrypted
+encryption-keys/
+keys/
+secrets/
+
+# Database dumps and exports
+*.sql
+*.sqlite
+*.db
+database-dumps/
+db-exports/
+
+# SSL certificates
+*.crt
+*.cert
+*.pem
+ssl/
+certificates/
+
+# API keys and tokens (additional patterns)
+api-keys.txt
+tokens.txt
+secrets.txt
+credentials.txt

@@ -8,17 +8,14 @@ import {
   Alert,
   useTheme,
   useMediaQuery,
-  CircularProgress,
 } from '@mui/material';
-import AuthService from '../../services/AuthService';
 
-interface SimpleLoginFormProps {
+interface SimpleAuthFallbackProps {
   onLoginSuccess: () => void;
 }
 
-const SimpleLoginForm: React.FC<SimpleLoginFormProps> = ({ onLoginSuccess }) => {
+const SimpleAuthFallback: React.FC<SimpleAuthFallbackProps> = ({ onLoginSuccess }) => {
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -30,15 +27,24 @@ const SimpleLoginForm: React.FC<SimpleLoginFormProps> = ({ onLoginSuccess }) => 
     setLoading(true);
     setError('');
 
-    try {
-      const authService = AuthService.getInstance();
-      await authService.authenticate({ email, password });
-      onLoginSuccess();
-    } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : 'Failed to sign in');
-    } finally {
+    // Simple validation
+    if (!email.trim()) {
+      setError('Please enter your email address');
       setLoading(false);
+      return;
     }
+
+    if (!email.includes('@')) {
+      setError('Please enter a valid email address');
+      setLoading(false);
+      return;
+    }
+
+    // Simulate login delay
+    setTimeout(() => {
+      setLoading(false);
+      onLoginSuccess();
+    }, 1000);
   };
 
   return (
@@ -66,9 +72,16 @@ const SimpleLoginForm: React.FC<SimpleLoginFormProps> = ({ onLoginSuccess }) => 
             MASA Assessment
           </Typography>
           <Typography variant="body1" color="text.secondary">
-            Sign in to access your assessments
+            Development Mode - Simple Login
           </Typography>
         </Box>
+
+        <Alert severity="info" sx={{ mb: 3 }}>
+          <Typography variant="body2">
+            <strong>Development Mode:</strong> Firebase authentication is not configured. 
+            This is a simple fallback for development purposes.
+          </Typography>
+        </Alert>
 
         {error && (
           <Alert severity="error" sx={{ mb: 2 }}>
@@ -87,18 +100,7 @@ const SimpleLoginForm: React.FC<SimpleLoginFormProps> = ({ onLoginSuccess }) => 
             required
             autoComplete="email"
             autoFocus
-            sx={{ mb: 2 }}
-          />
-          
-          <TextField
-            fullWidth
-            label="Password"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            margin="normal"
-            required
-            autoComplete="current-password"
+            disabled={loading}
             sx={{ mb: 3 }}
           />
 
@@ -107,21 +109,22 @@ const SimpleLoginForm: React.FC<SimpleLoginFormProps> = ({ onLoginSuccess }) => 
             fullWidth
             variant="contained"
             size="large"
-            disabled={loading}
+            disabled={loading || !email}
             sx={{ mb: 2 }}
           >
-            {loading ? <CircularProgress size={24} /> : 'Sign In'}
+            {loading ? 'Signing In...' : 'Continue to App'}
           </Button>
-
-          <Box sx={{ textAlign: 'center' }}>
-            <Typography variant="caption" color="text.secondary" sx={{ mt: 2, display: 'block' }}>
-              Demo credentials: Check your .env file for configured values
-            </Typography>
-          </Box>
         </form>
+
+        <Box sx={{ mt: 3, p: 2, bgcolor: 'grey.50', borderRadius: 1 }}>
+          <Typography variant="caption" color="text.secondary">
+            <strong>Note:</strong> This is a development fallback. For production use, 
+            please configure Firebase authentication properly.
+          </Typography>
+        </Box>
       </Paper>
     </Box>
   );
 };
 
-export default SimpleLoginForm;
+export default SimpleAuthFallback;

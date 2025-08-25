@@ -124,23 +124,16 @@ export const updateUserProfile = async (
   });
 };
 
-// Email link sign-in configuration
+// Email link sign-in configuration - Updated for post-Dynamic Links era
 const actionCodeSettings: ActionCodeSettings = {
   // URL you want to redirect back to. The domain (www.example.com) for this
   // URL must be whitelisted in the Firebase Console.
   url: window.location.origin + '/auth/verify',
   // This must be true
   handleCodeInApp: true,
-  iOS: {
-    bundleId: 'com.masa.swallowingassessment'
-  },
-  android: {
-    packageName: 'com.masa.swallowingassessment',
-    installApp: true,
-    minimumVersion: '12'
-  },
-  // Dynamic link domain for mobile apps
-  dynamicLinkDomain: 'your-dynamic-link-domain.page.link' // You'll need to set this up
+  // Removed iOS, Android, and dynamicLinkDomain configurations
+  // These are no longer needed for web-based email link handling
+  // This ensures compatibility after Firebase Dynamic Links shutdown in August 2025
 };
 
 // Send email link for sign-in

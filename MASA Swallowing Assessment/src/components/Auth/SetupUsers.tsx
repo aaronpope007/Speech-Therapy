@@ -118,15 +118,14 @@ const SetupUsers: React.FC<SetupUsersProps> = ({ onSetupComplete }) => {
           <ListItem>
             <ListItemText
               primary="Administrator"
-              secondary="Username: admin | Password: admin123"
-              primaryTypographyProps={{ fontWeight: 'bold' }}
+              secondary="Username: admin | Password: [configured in .env]"
             />
           </ListItem>
           <Divider />
           <ListItem>
             <ListItemText
               primary="Clinician"
-              secondary="Username: clinician | Password: clinician123"
+              secondary="Username: clinician | Password: [configured in .env]"
               primaryTypographyProps={{ fontWeight: 'bold' }}
             />
           </ListItem>

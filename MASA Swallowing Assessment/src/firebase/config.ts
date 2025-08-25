@@ -2,6 +2,31 @@ import { initializeApp } from 'firebase/app';
 import { getFirestore } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 
+// Security check: Ensure we're not exposing placeholder values
+const validateConfig = (config: any) => {
+  const requiredFields = [
+    'apiKey',
+    'authDomain', 
+    'projectId',
+    'storageBucket',
+    'messagingSenderId',
+    'appId'
+  ];
+  
+  const missingFields = requiredFields.filter(field => 
+    !config[field] || 
+    config[field].includes('your-') || 
+    config[field].includes('placeholder')
+  );
+  
+  if (missingFields.length > 0) {
+    console.error('Missing or invalid Firebase configuration:', missingFields);
+    return false;
+  }
+  
+  return true;
+};
+
 // Your Firebase configuration
 // Use environment variables for production security
 const firebaseConfig = {
@@ -13,10 +38,16 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID || "your-app-id"
 };
 
-// Initialize Firebase with error handling
+// Initialize Firebase with error handling and security validation
 let app;
 try {
+  // Validate configuration before initializing
+  if (!validateConfig(firebaseConfig)) {
+    throw new Error('Invalid Firebase configuration. Please check your .env file.');
+  }
+  
   app = initializeApp(firebaseConfig);
+  console.log('Firebase initialized successfully');
 } catch (error) {
   console.error('Firebase initialization error:', error);
   // Fallback to localStorage-only mode
