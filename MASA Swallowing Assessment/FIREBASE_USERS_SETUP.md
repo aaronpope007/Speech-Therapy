@@ -60,8 +60,8 @@ service cloud.firestore {
 
 When you first run the application, you'll see a setup screen that creates default users:
 
-- **Admin:** `admin` / `admin123`
-- **Clinician:** `clinician` / `clinician123`
+- **Admin:** `admin` / `[configured in .env]`
+- **Clinician:** `clinician` / `[configured in .env]`
 
 ### 2. Manual Setup (Alternative)
 

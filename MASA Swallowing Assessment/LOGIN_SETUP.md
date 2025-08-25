@@ -8,17 +8,15 @@ The MASA Assessment tool now includes a secure login system that allows users to
 
 The system comes with two default user accounts:
 
-### Administrator Account
-- **Username:** `admin`
-- **Password:** `admin123`
-- **Role:** Admin
-- **Permissions:** Full access to all features
+- **Admin User**:
+  - Email: `admin@masa.com`
+  - Password: `[configured in .env]`
+  - Role: Administrator
 
-### Clinician Account
-- **Username:** `clinician`
-- **Password:** `clinician123`
-- **Role:** Clinician
-- **Permissions:** Standard assessment and patient management
+- **Clinician User**:
+  - Email: `clinician@masa.com`
+  - Password: `[configured in .env]`
+  - Role: Speech Language Pathologist
 
 ## Features
 
@@ -61,7 +59,7 @@ To add new users, modify the `getDefaultUsers()` method in `src/services/AuthSer
 private getDefaultUsers(): { [username: string]: { password: string; user: AuthUser } } {
   return {
     'admin': {
-      password: 'admin123',
+      password: '[configured in .env]',
       user: {
         uid: 'admin-001',
         username: 'admin',
