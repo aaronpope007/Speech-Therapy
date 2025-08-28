@@ -18,14 +18,10 @@ interface DiagnosticResult {
   test: string;
   status: 'pass' | 'fail' | 'pending';
   message: string;
-  details?: Record<string, unknown>;
+  details?: any;
 }
 
-interface FirebaseDiagnosticProps {
-  onRetry: () => void;
-}
-
-const FirebaseDiagnostic: React.FC<FirebaseDiagnosticProps> = ({ onRetry }) => {
+const FirebaseDiagnosticRoute: React.FC = () => {
   const [results, setResults] = useState<DiagnosticResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [testEmail, setTestEmail] = useState('');
@@ -223,22 +219,14 @@ const FirebaseDiagnostic: React.FC<FirebaseDiagnosticProps> = ({ onRetry }) => {
           ))}
         </List>
 
-        <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
-          <Button
-            variant="contained"
-            onClick={runDiagnostics}
-            disabled={loading}
-          >
-            Re-run Diagnostics
-          </Button>
-          <Button
-            variant="outlined"
-            onClick={onRetry}
-            disabled={loading}
-          >
-            Retry Authentication
-          </Button>
-        </Box>
+        <Button
+          variant="contained"
+          onClick={runDiagnostics}
+          disabled={loading}
+          sx={{ mt: 2 }}
+        >
+          Re-run Diagnostics
+        </Button>
       </Paper>
 
       <Paper sx={{ p: 3 }}>
@@ -285,4 +273,4 @@ const FirebaseDiagnostic: React.FC<FirebaseDiagnosticProps> = ({ onRetry }) => {
   );
 };
 
-export default FirebaseDiagnostic;
+export default FirebaseDiagnosticRoute;

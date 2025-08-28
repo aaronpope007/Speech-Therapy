@@ -9,9 +9,11 @@ import { Box, CircularProgress, Button, Typography } from '@mui/material';
 import MasaMain from "./assets/Components/MasaMain";
 import UnifiedAuth from "./components/Auth/UnifiedAuth";
 import SimpleAuthFallback from "./components/Auth/SimpleAuthFallback";
-import FirebaseDiagnostic from "./components/Auth/FirebaseDiagnostic";
 import EmailLinkVerification from "./components/Auth/EmailLinkVerification";
 import EmailLinkTest from "./components/Auth/EmailLinkTest";
+import FirebaseDiagnostic from "./components/Auth/FirebaseDiagnostic";
+import FirebaseDiagnosticRoute from "./components/Auth/FirebaseDiagnosticRoute";
+import AuthDebug from "./components/Auth/AuthDebug";
 import FirebaseError from "./components/Auth/FirebaseError";
 import AuthService, { AuthUser } from "./services/AuthService";
 
@@ -195,6 +197,22 @@ function App() {
         <Route 
           path="/test/email-link" 
           element={<EmailLinkTest />} 
+        />
+      )}
+      
+      {/* Firebase diagnostic route (for development/testing only) */}
+      {import.meta.env.DEV && (
+        <Route 
+          path="/test/firebase-diagnostic" 
+          element={<FirebaseDiagnosticRoute />} 
+        />
+      )}
+      
+      {/* Auth debug route (for development/testing only) */}
+      {import.meta.env.DEV && (
+        <Route 
+          path="/test/auth-debug" 
+          element={<AuthDebug />} 
         />
       )}
       
