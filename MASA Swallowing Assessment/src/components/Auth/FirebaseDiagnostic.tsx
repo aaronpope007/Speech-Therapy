@@ -71,7 +71,7 @@ const FirebaseDiagnostic: React.FC<FirebaseDiagnosticProps> = ({ onRetry }) => {
     };
 
     const missingVars = Object.entries(envVars)
-      .filter(([key, value]) => !value || value.includes('your-'))
+      .filter(([, value]) => !value || value.includes('your-'))
       .map(([key]) => key);
 
     if (missingVars.length > 0) {

@@ -16,7 +16,7 @@ import { onAuthStateChanged, User } from 'firebase/auth';
 const AuthDebug: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [authState, setAuthState] = useState<string>('checking');
-  const [localStorage, setLocalStorage] = useState<Record<string, string>>({});
+  const [localStorageData, setLocalStorageData] = useState<Record<string, string>>({});
 
   useEffect(() => {
     // Check current auth state
@@ -41,9 +41,9 @@ const AuthDebug: React.FC = () => {
     
     const firebaseData: Record<string, string> = {};
     firebaseKeys.forEach(key => {
-      firebaseData[key] = localStorage.getItem(key) || '';
+      firebaseData[key] = localStorage.getItem(key) ?? '';
     });
-    setLocalStorage(firebaseData);
+    setLocalStorageData(firebaseData);
   }, []);
 
   const clearAuth = () => {
@@ -139,9 +139,9 @@ const AuthDebug: React.FC = () => {
           Local Storage (Firebase Related)
         </Typography>
         
-        {Object.keys(localStorage).length > 0 ? (
+        {Object.keys(localStorageData).length > 0 ? (
           <List>
-            {Object.entries(localStorage).map(([key, value]) => (
+            {Object.entries(localStorageData).map(([key, value]) => (
               <ListItem key={key}>
                 <ListItemText
                   primary={key}
