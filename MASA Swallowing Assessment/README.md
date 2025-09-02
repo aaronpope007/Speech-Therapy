@@ -73,6 +73,16 @@ A comprehensive React application for conducting MASA (Mann Assessment of Swallo
 - **Patient Management**: Complete patient lifecycle management
 - **Assessment Validation**: Ensures complete assessments before saving
 
+### 🤖 AI-Powered Clinical Reports
+- **AI Report Generation**: Google Gemini-powered clinical impressions
+- **Severity Classification**: Automatic dysphagia severity assessment
+- **Treatment Recommendations**: Evidence-based intervention suggestions
+- **Risk Factor Analysis**: Comprehensive aspiration and complication risks
+- **Customizable Reports**: Clinical, patient-friendly, or technical tones
+- **Export Options**: Copy to clipboard or download as text files
+- **Confidence Scoring**: AI confidence levels for clinical decisions
+- **Real-time Generation**: Instant report creation upon assessment completion
+
 ### ♿ Accessibility & UX
 - **Keyboard Navigation**: Full keyboard support for all interactions
 - **Screen Reader Support**: ARIA labels and semantic HTML
@@ -202,6 +212,13 @@ VITE_FIREBASE_APP_ID=your-app-id
 - **Import**: Upload previously exported assessment files
 - **PDF Reports**: Generate professional clinical reports
 - **Analytics**: View statistics and trends across assessments
+
+### AI Report Generation
+- **Setup Required**: Configure Google Gemini API key (see GEMINI_API_SETUP.md)
+- **Automatic Triggering**: Available when all 24 assessment areas are complete
+- **Customizable Reports**: Choose clinical tone and content preferences
+- **Export Options**: Copy to clipboard or download as text files
+- **Clinical Validation**: Always review AI-generated content before clinical use
 
 ### Patient Progress Tracking
 - **Patient Groups**: Automatically groups assessments by patient

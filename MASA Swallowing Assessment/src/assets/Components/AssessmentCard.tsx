@@ -26,6 +26,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 
 import { Patient, AssessmentData } from "../../types/Patient";
 import { EnhancedPatientService } from "../../services/EnhancedPatientService";
+import AIReportGenerator from "../../components/Assessment/AIReportGenerator";
 
 interface PatientInfo {
   name: string;
@@ -555,6 +556,21 @@ const AssessmentCard: React.FC<AssessmentCardProps> = ({
           placeholder="Enter any additional clinical observations, recommendations, or notes here..."
         />
       </Paper>
+
+      {/* AI Report Generator */}
+      {isAssessmentComplete && (
+        <AIReportGenerator
+          assessmentData={{
+            id: currentAssessmentId || 'temp',
+            patientId: selectedPatient?.id || 'temp',
+            patientInfo,
+            selectedGrades,
+            notes,
+            savedDate: new Date().toISOString()
+          }}
+          disabled={!canSave}
+        />
+      )}
     </div>
   );
 };
