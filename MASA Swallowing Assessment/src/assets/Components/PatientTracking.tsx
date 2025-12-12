@@ -13,6 +13,9 @@ import {
   Card,
   CardContent,
   Alert,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
 } from "@mui/material";
 import {
   Timeline as TimelineIcon,
@@ -20,6 +23,7 @@ import {
   Person as PersonIcon,
   Assessment as AssessmentIcon,
   Download as DownloadIcon,
+  ExpandMore as ExpandMoreIcon,
 } from "@mui/icons-material";
 import { AssessmentData } from "../../types/Patient";
 
@@ -369,78 +373,86 @@ const PatientTracking: React.FC<PatientTrackingProps> = ({ onLoadAssessment }) =
               </Box>
 
               {/* Assessment History */}
-              <Box>
-                <Typography variant="h6" gutterBottom>
-                  Assessment History
-                </Typography>
-                <List>
-                  {selectedPatientData.assessments.map((assessment, index) => {
-                    const score = Object.values(assessment.selectedGrades).reduce(
-                      (acc: number, val) => acc + (typeof val === 'number' ? val : 0), 0
-                    );
-                    
-                    let severity = "Unknown";
-                    let color: "success" | "warning" | "error" | "default" = "default";
-                    
-                    if (score >= 178) {
-                      severity = "No abnormality";
-                      color = "success";
-                    } else if (score >= 168) {
-                      severity = "Mild dysphagia";
-                      color = "warning";
-                    } else if (score >= 139) {
-                      severity = "Moderate dysphagia";
-                      color = "warning";
-                    } else {
-                      severity = "Severe dysphagia";
-                      color = "error";
-                    }
+              <Accordion defaultExpanded={selectedPatientData.assessments.length <= 3}>
+                <AccordionSummary
+                  expandIcon={<ExpandMoreIcon />}
+                  aria-controls="assessment-history-content"
+                  id="assessment-history-header"
+                >
+                  <Typography variant="h6">
+                    Assessment History ({selectedPatientData.assessments.length})
+                  </Typography>
+                </AccordionSummary>
+                <AccordionDetails>
+                  <List>
+                    {selectedPatientData.assessments.map((assessment, index) => {
+                      const score = Object.values(assessment.selectedGrades).reduce(
+                        (acc: number, val) => acc + (typeof val === 'number' ? val : 0), 0
+                      );
+                      
+                      let severity = "Unknown";
+                      let color: "success" | "warning" | "error" | "default" = "default";
+                      
+                      if (score >= 178) {
+                        severity = "No abnormality";
+                        color = "success";
+                      } else if (score >= 168) {
+                        severity = "Mild dysphagia";
+                        color = "warning";
+                      } else if (score >= 139) {
+                        severity = "Moderate dysphagia";
+                        color = "warning";
+                      } else {
+                        severity = "Severe dysphagia";
+                        color = "error";
+                      }
 
-                    return (
-                      <ListItem
-                        key={assessment.id}
-                        sx={{ mb: 1, border: 1, borderColor: 'grey.300', borderRadius: 1 }}
-                      >
-                        <ListItemText
-                          primary={
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                              <Typography variant="subtitle1">
-                                Assessment #{index + 1}
-                              </Typography>
-                              <Chip label={`${score}/200`} color="primary" size="small" />
-                              <Chip label={severity} color={color} size="small" />
-                              <Typography variant="body2" color="text.secondary">
-                                {assessment.patientInfo.assessmentDate}
-                              </Typography>
-                            </Box>
-                          }
-                          secondary={
-                            <Box sx={{ mt: 1 }}>
-                              <Typography variant="body2" color="text.secondary">
-                                Clinician: {assessment.patientInfo.clinician}
-                              </Typography>
-                              {assessment.notes && (
-                                <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-                                  Notes: {assessment.notes}
+                      return (
+                        <ListItem
+                          key={assessment.id}
+                          sx={{ mb: 1, border: 1, borderColor: 'grey.300', borderRadius: 1 }}
+                        >
+                          <ListItemText
+                            primary={
+                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
+                                <Typography variant="subtitle1">
+                                  Assessment #{index + 1}
                                 </Typography>
-                              )}
-                            </Box>
-                          }
-                        />
-                        <Box sx={{ display: 'flex', gap: 1 }}>
-                          <IconButton
-                            size="small"
-                            onClick={() => onLoadAssessment(assessment)}
-                            color="primary"
-                          >
-                            <AssessmentIcon />
-                          </IconButton>
-                        </Box>
-                      </ListItem>
-                    );
-                  })}
-                </List>
-              </Box>
+                                <Chip label={`${score}/200`} color="primary" size="small" />
+                                <Chip label={severity} color={color} size="small" />
+                                <Typography variant="body2" color="text.secondary">
+                                  {assessment.patientInfo.assessmentDate}
+                                </Typography>
+                              </Box>
+                            }
+                            secondary={
+                              <Box sx={{ mt: 1 }}>
+                                <Typography variant="body2" color="text.secondary">
+                                  Clinician: {assessment.patientInfo.clinician}
+                                </Typography>
+                                {assessment.notes && (
+                                  <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                                    Notes: {assessment.notes}
+                                  </Typography>
+                                )}
+                              </Box>
+                            }
+                          />
+                          <Box sx={{ display: 'flex', gap: 1 }}>
+                            <IconButton
+                              size="small"
+                              onClick={() => onLoadAssessment(assessment)}
+                              color="primary"
+                            >
+                              <AssessmentIcon />
+                            </IconButton>
+                          </Box>
+                        </ListItem>
+                      );
+                    })}
+                  </List>
+                </AccordionDetails>
+              </Accordion>
             </Paper>
           ) : (
             <Paper sx={{ p: 4, textAlign: 'center' }}>

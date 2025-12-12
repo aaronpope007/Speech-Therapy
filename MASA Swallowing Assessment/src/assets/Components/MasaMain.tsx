@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Container, Typography, Box, CssBaseline, ThemeProvider, createTheme, Button, AppBar, Toolbar, LinearProgress, Chip } from "@mui/material";
+import { Container, Typography, Box, CssBaseline, ThemeProvider, createTheme, Button, AppBar, Toolbar, LinearProgress, Chip, CircularProgress } from "@mui/material";
 import AssessmentCard from "./AssessmentCard";
 import ClinicalSummary from "./ClinicalSummary";
 import AssessmentList from "./AssessmentList";
@@ -179,6 +179,15 @@ const MasaMain: React.FC<MasaMainProps> = ({ onLogout }) => {
       <Box sx={{ minHeight: '100vh', width: '100vw', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', background: '#fff' }}>
         <AppBar position="static" sx={{ mb: 3, width: '100%', maxWidth: 1200 }}>
           <Toolbar>
+            <Button
+              color="inherit"
+              startIcon={<HomeIcon />}
+              onClick={() => setCurrentView('dashboard')}
+              sx={{ mr: 2 }}
+              variant={currentView === 'dashboard' ? 'outlined' : 'text'}
+            >
+              Home
+            </Button>
             <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
               {getViewTitle()}
             </Typography>
@@ -295,17 +304,46 @@ const MasaMain: React.FC<MasaMainProps> = ({ onLogout }) => {
 // Analytics Component
 const AnalyticsView: React.FC = () => {
   const [assessments, setAssessments] = useState<AssessmentData[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const loadAssessments = async () => {
+    try {
+      setLoading(true);
+      // Force localStorage mode
+      EnhancedPatientService.switchToLocalStorage();
+      // Small delay to ensure switch takes effect
+      await new Promise(resolve => setTimeout(resolve, 50));
+      const savedAssessments = await EnhancedPatientService.getAllAssessments();
+      console.log('Analytics: Loaded assessments:', savedAssessments.length);
+      setAssessments(savedAssessments);
+    } catch (error) {
+      console.error('Error loading assessments:', error);
+      // Fallback: try loading directly from PatientService
+      try {
+        const { PatientService } = await import('../../services/PatientService');
+        const directAssessments = PatientService.getAllAssessments();
+        console.log('Analytics: Fallback load:', directAssessments.length, 'assessments');
+        setAssessments(directAssessments);
+      } catch (fallbackError) {
+        console.error('Analytics: Fallback load also failed:', fallbackError);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const loadAssessments = async () => {
-      try {
-        const savedAssessments = await EnhancedPatientService.getAllAssessments();
-        setAssessments(savedAssessments);
-      } catch (error) {
-        console.error('Error loading assessments:', error);
+    loadAssessments();
+    // Reload when component becomes visible (handles tab switching)
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        loadAssessments();
       }
     };
-    loadAssessments();
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, []);
 
   const getAverageScore = () => {
@@ -329,46 +367,68 @@ const AnalyticsView: React.FC = () => {
   };
 
   const distribution = getSeverityDistribution();
+  const dysphagiaCases = distribution.mild + distribution.moderate + distribution.severe;
 
   return (
     <Box sx={{ width: '100%' }}>
-      <Typography variant="h4" component="h1" gutterBottom>
-        Assessment Analytics
-      </Typography>
-      
-      <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 2, mb: 4 }}>
-        <Box sx={{ p: 2, bgcolor: 'primary.light', color: 'white', borderRadius: 2, textAlign: 'center' }}>
-          <Typography variant="h4">{assessments.length}</Typography>
-          <Typography variant="body2">Total Assessments</Typography>
-        </Box>
-        <Box sx={{ p: 2, bgcolor: 'secondary.light', color: 'white', borderRadius: 2, textAlign: 'center' }}>
-          <Typography variant="h4">{getAverageScore()}</Typography>
-          <Typography variant="body2">Average Score</Typography>
-        </Box>
-        <Box sx={{ p: 2, bgcolor: 'success.light', color: 'white', borderRadius: 2, textAlign: 'center' }}>
-          <Typography variant="h4">{distribution.normal}</Typography>
-          <Typography variant="body2">Normal Results</Typography>
-        </Box>
-        <Box sx={{ p: 2, bgcolor: 'warning.light', color: 'white', borderRadius: 2, textAlign: 'center' }}>
-          <Typography variant="h4">{distribution.mild + distribution.moderate}</Typography>
-          <Typography variant="body2">Dysphagia Cases</Typography>
-        </Box>
-      </Box>
-
-      <Typography variant="h6" gutterBottom>
-        Severity Distribution
-      </Typography>
-      <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
-        <Chip label={`Normal: ${distribution.normal}`} color="success" />
-        <Chip label={`Mild: ${distribution.mild}`} color="warning" />
-        <Chip label={`Moderate: ${distribution.moderate}`} color="warning" />
-        <Chip label={`Severe: ${distribution.severe}`} color="error" />
-      </Box>
-
-      {assessments.length === 0 && (
-        <Typography variant="body1" color="text.secondary" sx={{ textAlign: 'center', mt: 4 }}>
-          No assessments found. Complete some assessments to see analytics.
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+        <Typography variant="h4" component="h1" gutterBottom>
+          Assessment Analytics
         </Typography>
+        <Button
+          variant="outlined"
+          onClick={loadAssessments}
+          disabled={loading}
+          sx={{ minWidth: 120 }}
+        >
+          {loading ? 'Loading...' : 'Refresh'}
+        </Button>
+      </Box>
+      
+      {loading ? (
+        <Box sx={{ textAlign: 'center', py: 8 }}>
+          <CircularProgress />
+          <Typography variant="body1" color="text.secondary" sx={{ mt: 2 }}>
+            Loading analytics...
+          </Typography>
+        </Box>
+      ) : (
+        <>
+          <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 2, mb: 4 }}>
+            <Box sx={{ p: 2, bgcolor: 'primary.light', color: 'white', borderRadius: 2, textAlign: 'center' }}>
+              <Typography variant="h4">{assessments.length}</Typography>
+              <Typography variant="body2">Total Assessments</Typography>
+            </Box>
+            <Box sx={{ p: 2, bgcolor: 'secondary.light', color: 'white', borderRadius: 2, textAlign: 'center' }}>
+              <Typography variant="h4">{getAverageScore()}</Typography>
+              <Typography variant="body2">Average Score</Typography>
+            </Box>
+            <Box sx={{ p: 2, bgcolor: 'success.light', color: 'white', borderRadius: 2, textAlign: 'center' }}>
+              <Typography variant="h4">{distribution.normal}</Typography>
+              <Typography variant="body2">Normal Results</Typography>
+            </Box>
+            <Box sx={{ p: 2, bgcolor: 'warning.light', color: 'white', borderRadius: 2, textAlign: 'center' }}>
+              <Typography variant="h4">{dysphagiaCases}</Typography>
+              <Typography variant="body2">Dysphagia Cases</Typography>
+            </Box>
+          </Box>
+
+          <Typography variant="h6" gutterBottom>
+            Severity Distribution
+          </Typography>
+          <Box sx={{ display: 'flex', gap: 1, mb: 2, flexWrap: 'wrap' }}>
+            <Chip label={`Normal: ${distribution.normal}`} color="success" />
+            <Chip label={`Mild: ${distribution.mild}`} color="warning" />
+            <Chip label={`Moderate: ${distribution.moderate}`} color="warning" />
+            <Chip label={`Severe: ${distribution.severe}`} color="error" />
+          </Box>
+
+          {assessments.length === 0 && (
+            <Typography variant="body1" color="text.secondary" sx={{ textAlign: 'center', mt: 4 }}>
+              No assessments found. Complete some assessments or generate demo data to see analytics.
+            </Typography>
+          )}
+        </>
       )}
     </Box>
   );

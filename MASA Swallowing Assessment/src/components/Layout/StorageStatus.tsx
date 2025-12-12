@@ -18,16 +18,21 @@ import {
   Cloud as CloudIcon, 
   Storage as StorageIcon,
   Sync as SyncIcon,
-  ExpandMore as ExpandMoreIcon
+  ExpandMore as ExpandMoreIcon,
+  DataObject as DataObjectIcon,
+  Delete as DeleteIcon
 } from '@mui/icons-material';
 import { EnhancedPatientService } from '../../services/EnhancedPatientService';
 import { FirebaseService } from '../../services/FirebaseService';
+import { DemoDataGenerator } from '../../utils/generateDemoData';
 
 const StorageStatus: React.FC = () => {
   const [status, setStatus] = useState(EnhancedPatientService.getStorageStatus());
   const [loading, setLoading] = useState(false);
   const [migrationDialog, setMigrationDialog] = useState(false);
   const [migrationResult, setMigrationResult] = useState<'success' | 'error' | null>(null);
+  const [demoDataDialog, setDemoDataDialog] = useState(false);
+  const [storageStats, setStorageStats] = useState(DemoDataGenerator.getStorageStats());
   const [debugInfo, setDebugInfo] = useState({
     firebaseAvailable: false,
     envVars: {
@@ -44,6 +49,7 @@ const StorageStatus: React.FC = () => {
     // Update status periodically
     const interval = setInterval(() => {
       setStatus(EnhancedPatientService.getStorageStatus());
+      setStorageStats(DemoDataGenerator.getStorageStats());
       setDebugInfo({
         firebaseAvailable: FirebaseService.isAvailable(),
         envVars: {
@@ -73,6 +79,25 @@ const StorageStatus: React.FC = () => {
       setMigrationResult('error');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleGenerateDemoData = () => {
+    if (window.confirm('This will generate demo patient data. Continue?')) {
+      DemoDataGenerator.generateDemoData();
+      setStorageStats(DemoDataGenerator.getStorageStats());
+      setDemoDataDialog(false);
+      // Refresh the page to show new data
+      window.location.reload();
+    }
+  };
+
+  const handleClearAllData = () => {
+    if (window.confirm('Are you sure you want to delete ALL patient and assessment data? This cannot be undone.')) {
+      DemoDataGenerator.clearAllData();
+      setStorageStats(DemoDataGenerator.getStorageStats());
+      // Refresh the page
+      window.location.reload();
     }
   };
 
@@ -120,6 +145,45 @@ const StorageStatus: React.FC = () => {
           />
         )}
       </Box>
+
+      {/* Demo Data Controls - Only show when using localStorage */}
+      {status.currentMethod === 'localStorage' && (
+        <Box sx={{ display: 'flex', gap: 1, mb: 2, flexWrap: 'wrap' }}>
+          <Button
+            size="small"
+            startIcon={<DataObjectIcon />}
+            onClick={() => setDemoDataDialog(true)}
+            variant="outlined"
+            color="secondary"
+          >
+            Generate Demo Data
+          </Button>
+          {storageStats.patientCount > 0 && (
+            <Button
+              size="small"
+              startIcon={<DeleteIcon />}
+              onClick={handleClearAllData}
+              variant="outlined"
+              color="error"
+            >
+              Clear All Data
+            </Button>
+          )}
+        </Box>
+      )}
+
+      {/* Storage Statistics */}
+      {status.currentMethod === 'localStorage' && (
+        <Box sx={{ mb: 2, p: 2, bgcolor: 'background.paper', borderRadius: 1, border: '1px solid', borderColor: 'divider' }}>
+          <Typography variant="body2" sx={{ mb: 1, fontWeight: 'bold' }}>
+            Local Storage Statistics:
+          </Typography>
+          <Typography variant="body2">
+            Patients: {storageStats.patientCount} | Assessments: {storageStats.assessmentCount} | 
+            Size: {(storageStats.totalStorageSize / 1024).toFixed(2)} KB
+          </Typography>
+        </Box>
+      )}
 
       {/* Debug Information */}
       <Accordion sx={{ mb: 2 }}>
@@ -182,6 +246,36 @@ const StorageStatus: React.FC = () => {
             color="primary"
           >
             {loading ? 'Migrating...' : 'Start Migration'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Demo Data Dialog */}
+      <Dialog open={demoDataDialog} onClose={() => setDemoDataDialog(false)}>
+        <DialogTitle>Generate Demo Data</DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" sx={{ mb: 2 }}>
+            This will create 5 sample patients with 1-3 assessments each. 
+            This is useful for demonstrating the application without real patient data.
+          </Typography>
+          {storageStats.patientCount > 0 && (
+            <Alert severity="warning" sx={{ mb: 2 }}>
+              You already have {storageStats.patientCount} patient(s) in storage. 
+              Generating demo data will add to your existing data.
+            </Alert>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDemoDataDialog(false)}>
+            Cancel
+          </Button>
+          <Button
+            onClick={handleGenerateDemoData}
+            variant="contained"
+            color="secondary"
+            startIcon={<DataObjectIcon />}
+          >
+            Generate Demo Data
           </Button>
         </DialogActions>
       </Dialog>

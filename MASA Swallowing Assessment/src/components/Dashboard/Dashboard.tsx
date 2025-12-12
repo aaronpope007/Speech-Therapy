@@ -17,6 +17,10 @@ import {
   DialogActions,
   TextField,
   Fab,
+  CircularProgress,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -28,9 +32,11 @@ import {
   Delete as DeleteIcon,
   Visibility as ViewIcon,
   Download as DownloadIcon,
+  ExpandMore as ExpandMoreIcon,
 } from '@mui/icons-material';
 import { EnhancedPatientService } from '../../services/EnhancedPatientService';
 import { PatientWithAssessments, AssessmentData } from '../../types/Patient';
+import { DemoDataGenerator } from '../../utils/generateDemoData';
 
 interface DashboardProps {
   onStartNewAssessment: () => void;
@@ -46,6 +52,7 @@ const Dashboard: React.FC<DashboardProps> = ({
   onNavigateToAnalytics,
 }) => {
   const [patients, setPatients] = useState<PatientWithAssessments[]>([]);
+  const [loading, setLoading] = useState(true);
   const [newPatientDialog, setNewPatientDialog] = useState(false);
   const [newPatientData, setNewPatientData] = useState({
     name: '',
@@ -56,14 +63,46 @@ const Dashboard: React.FC<DashboardProps> = ({
 
   useEffect(() => {
     loadPatients();
+    // Also reload when component becomes visible (handles tab switching)
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        loadPatients();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, []);
 
   const loadPatients = async () => {
     try {
+      setLoading(true);
+      // Force localStorage mode before loading
+      EnhancedPatientService.switchToLocalStorage();
+      // Small delay to ensure switch takes effect
+      await new Promise(resolve => setTimeout(resolve, 50));
       const patientsWithAssessments = await EnhancedPatientService.getPatientsWithAssessments();
+      console.log('Loaded patients:', patientsWithAssessments.length);
+      console.log('Patients data:', patientsWithAssessments);
+      if (patientsWithAssessments.length > 0) {
+        console.log('Sample patient:', patientsWithAssessments[0]);
+        console.log('Total assessments:', patientsWithAssessments.reduce((sum, p) => sum + (p.totalAssessments || 0), 0));
+      }
       setPatients(patientsWithAssessments);
     } catch (error) {
       console.error('Error loading patients:', error);
+      // Fallback: try loading directly from PatientService
+      try {
+        const { PatientService } = await import('../../services/PatientService');
+        const directPatients = PatientService.getPatientsWithAssessments();
+        console.log('Fallback load:', directPatients.length, 'patients');
+        setPatients(directPatients);
+      } catch (fallbackError) {
+        console.error('Fallback load also failed:', fallbackError);
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -121,8 +160,22 @@ const Dashboard: React.FC<DashboardProps> = ({
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
   };
 
-  const totalAssessments = patients.reduce((sum, patient) => sum + patient.totalAssessments, 0);
+  // Calculate stats - ensure we handle undefined/null values
+  const totalAssessments = patients.reduce((sum, patient) => {
+    return sum + (patient.totalAssessments || (patient.assessments ? patient.assessments.length : 0));
+  }, 0);
   const totalPatients = patients.length;
+  
+  // Calculate normal and dysphagia cases based on average scores
+  const normalResults = patients.filter(p => {
+    const score = p.averageScore;
+    return score !== undefined && score !== null && score >= 178;
+  }).length;
+  
+  const dysphagiaCases = patients.filter(p => {
+    const score = p.averageScore;
+    return score !== undefined && score !== null && score < 178;
+  }).length;
 
   return (
     <Box sx={{ width: '100%', maxWidth: 1200, mx: 'auto', p: 3 }}>
@@ -158,7 +211,7 @@ const Dashboard: React.FC<DashboardProps> = ({
           <Card sx={{ textAlign: 'center', bgcolor: 'success.light', color: 'white' }}>
             <CardContent>
               <Typography variant="h4">
-                {patients.filter(p => p.averageScore && p.averageScore >= 178).length}
+                {normalResults}
               </Typography>
               <Typography variant="body2">Normal Results</Typography>
             </CardContent>
@@ -168,7 +221,7 @@ const Dashboard: React.FC<DashboardProps> = ({
           <Card sx={{ textAlign: 'center', bgcolor: 'warning.light', color: 'white' }}>
             <CardContent>
               <Typography variant="h4">
-                {patients.filter(p => p.averageScore && p.averageScore < 178).length}
+                {dysphagiaCases}
               </Typography>
               <Typography variant="body2">Dysphagia Cases</Typography>
             </CardContent>
@@ -186,6 +239,16 @@ const Dashboard: React.FC<DashboardProps> = ({
           sx={{ minWidth: 200 }}
         >
           New Assessment
+        </Button>
+        <Button
+          variant="outlined"
+          size="large"
+          startIcon={<PersonIcon />}
+          onClick={loadPatients}
+          sx={{ minWidth: 200 }}
+          title="Refresh data from storage"
+        >
+          Refresh Data
         </Button>
         <Button
           variant="outlined"
@@ -227,9 +290,59 @@ const Dashboard: React.FC<DashboardProps> = ({
       {/* Content */}
       {viewMode === 'all' ? (
         // All Assessments View
-        <Grid container spacing={3}>
-          {patients.flatMap(patient => 
-            patient.assessments.map(assessment => (
+        <Box>
+          {(() => {
+            const allAssessments = patients.flatMap(patient => patient.assessments);
+            if (allAssessments.length === 0) {
+              return (
+                <Box sx={{ textAlign: 'center', py: 8 }}>
+                  <Typography variant="h6" color="text.secondary" gutterBottom>
+                    No assessments found
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                    {patients.length > 0 
+                      ? 'Patients exist but have no assessments yet. Switch to "By Patient" view to see them.'
+                      : 'Create assessments to see them here.'}
+                  </Typography>
+                  {patients.length > 0 && (
+                    <Button
+                      variant="outlined"
+                      onClick={() => setViewMode('patients')}
+                      size="small"
+                    >
+                      View By Patient
+                    </Button>
+                  )}
+                </Box>
+              );
+            }
+            return (
+              <Accordion defaultExpanded={true} sx={{ boxShadow: 2 }}>
+                <AccordionSummary
+                  expandIcon={<ExpandMoreIcon />}
+                  aria-controls="all-assessments-content"
+                  id="all-assessments-header"
+                  sx={{ 
+                    bgcolor: 'background.paper',
+                    '&:hover': { bgcolor: 'action.hover' }
+                  }}
+                >
+                  <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
+                    <Typography variant="h6" sx={{ flexGrow: 1 }}>
+                      All Assessments ({allAssessments.length})
+                    </Typography>
+                    <Chip 
+                      label={`${allAssessments.length} total`} 
+                      size="small" 
+                      color="primary"
+                      variant="outlined"
+                      sx={{ mr: 2 }}
+                    />
+                  </Box>
+                </AccordionSummary>
+                <AccordionDetails sx={{ p: 0 }}>
+                  <Grid container spacing={3} sx={{ p: 3 }}>
+                    {allAssessments.map(assessment => (
               <Grid item xs={12} md={6} lg={4} key={assessment.id}>
                 <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
                   <CardContent sx={{ flexGrow: 1 }}>
@@ -324,13 +437,17 @@ const Dashboard: React.FC<DashboardProps> = ({
                   </CardActions>
                 </Card>
               </Grid>
-            ))
-          )}
-        </Grid>
+                    ))}
+                  </Grid>
+                </AccordionDetails>
+              </Accordion>
+            );
+          })()}
+        </Box>
       ) : (
         // By Patient View
         <Grid container spacing={3}>
-          {patients.map(patient => (
+          {patients.length > 0 ? patients.map(patient => (
             <Grid item xs={12} md={6} lg={4} key={patient.id}>
               <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
                 <CardContent sx={{ flexGrow: 1 }}>
@@ -374,33 +491,79 @@ const Dashboard: React.FC<DashboardProps> = ({
                     )}
                   </Box>
 
-                  {patient.latestAssessment && (
-                    <Box sx={{ mb: 2 }}>
-                      <Typography variant="body2" color="text.secondary" gutterBottom>
-                        Latest Assessment:
-                      </Typography>
-                      {(() => {
-                        const score = Object.values(patient.latestAssessment.selectedGrades).reduce((acc: number, val) => 
-                          acc + (typeof val === 'number' ? val : 0), 0);
-                        const interpretation = getScoringInterpretation(score);
-                        return (
-                          <Chip 
-                            label={interpretation.severity} 
-                            color={interpretation.color} 
-                            size="small"
-                          />
-                        );
-                      })()}
-                    </Box>
-                  )}
-
-                  {patient.assessments.length > 1 && (
-                    <Box sx={{ display: 'flex', alignItems: 'center', color: 'text.secondary' }}>
-                      <TrendingUpIcon sx={{ fontSize: 16, mr: 0.5 }} />
-                      <Typography variant="body2">
-                        {patient.assessments.length} assessments over time
-                      </Typography>
-                    </Box>
+                  {patient.assessments.length > 0 && (
+                    <Accordion sx={{ mt: 2, boxShadow: 1 }}>
+                      <AccordionSummary
+                        expandIcon={<ExpandMoreIcon />}
+                        aria-controls={`patient-${patient.id}-assessments-content`}
+                        id={`patient-${patient.id}-assessments-header`}
+                      >
+                        <Typography variant="body2" sx={{ fontWeight: 'medium' }}>
+                          {patient.assessments.length} Assessment{patient.assessments.length !== 1 ? 's' : ''}
+                          {patient.latestAssessment && (() => {
+                            const score = Object.values(patient.latestAssessment.selectedGrades).reduce((acc: number, val) => 
+                              acc + (typeof val === 'number' ? val : 0), 0);
+                            const interpretation = getScoringInterpretation(score);
+                            return (
+                              <Chip 
+                                label={`Latest: ${interpretation.severity}`} 
+                                color={interpretation.color} 
+                                size="small"
+                                sx={{ ml: 1 }}
+                              />
+                            );
+                          })()}
+                        </Typography>
+                      </AccordionSummary>
+                      <AccordionDetails>
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                          {patient.assessments.map((assessment, index) => {
+                            const score = Object.values(assessment.selectedGrades).reduce((acc: number, val) => 
+                              acc + (typeof val === 'number' ? val : 0), 0);
+                            const interpretation = getScoringInterpretation(score);
+                            return (
+                              <Card key={assessment.id} variant="outlined" sx={{ p: 1.5 }}>
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                  <Box>
+                                    <Typography variant="body2" fontWeight="medium">
+                                      Assessment #{index + 1} - {formatDate(assessment.patientInfo.assessmentDate)}
+                                    </Typography>
+                                    <Box sx={{ display: 'flex', gap: 1, mt: 0.5, flexWrap: 'wrap' }}>
+                                      <Chip 
+                                        label={interpretation.severity} 
+                                        color={interpretation.color} 
+                                        size="small"
+                                      />
+                                      <Chip 
+                                        label={`${score}/200`} 
+                                        variant="outlined" 
+                                        size="small"
+                                      />
+                                      {assessment.patientInfo.clinician && (
+                                        <Typography variant="caption" color="text.secondary">
+                                          {assessment.patientInfo.clinician}
+                                        </Typography>
+                                      )}
+                                    </Box>
+                                  </Box>
+                                  <Box sx={{ display: 'flex', gap: 0.5 }}>
+                                    <Tooltip title="View Assessment">
+                                      <IconButton 
+                                        size="small" 
+                                        onClick={() => onLoadAssessment(assessment)}
+                                        color="primary"
+                                      >
+                                        <ViewIcon fontSize="small" />
+                                      </IconButton>
+                                    </Tooltip>
+                                  </Box>
+                                </Box>
+                              </Card>
+                            );
+                          })}
+                        </Box>
+                      </AccordionDetails>
+                    </Accordion>
                   )}
                 </CardContent>
                 
@@ -416,7 +579,18 @@ const Dashboard: React.FC<DashboardProps> = ({
                 </CardActions>
               </Card>
             </Grid>
-          ))}
+          )) : (
+            <Grid item xs={12}>
+              <Box sx={{ textAlign: 'center', py: 8 }}>
+                <Typography variant="h6" color="text.secondary" gutterBottom>
+                  No patients found
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Add your first patient to start tracking assessments.
+                </Typography>
+              </Box>
+            </Grid>
+          )}
         </Grid>
       )}
 
@@ -472,8 +646,18 @@ const Dashboard: React.FC<DashboardProps> = ({
         </DialogActions>
       </Dialog>
 
+      {/* Loading State */}
+      {loading && (
+        <Box sx={{ textAlign: 'center', mt: 8 }}>
+          <CircularProgress />
+          <Typography variant="body1" color="text.secondary" sx={{ mt: 2 }}>
+            Loading patients...
+          </Typography>
+        </Box>
+      )}
+
       {/* Empty State */}
-      {patients.length === 0 && (
+      {!loading && patients.length === 0 && (
         <Box sx={{ textAlign: 'center', mt: 8 }}>
           <Typography variant="h5" color="text.secondary" gutterBottom>
             No patients found
@@ -481,14 +665,53 @@ const Dashboard: React.FC<DashboardProps> = ({
           <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
             Add your first patient to start creating assessments and tracking progress over time.
           </Typography>
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={() => setNewPatientDialog(true)}
-            size="large"
-          >
-            Add First Patient
-          </Button>
+          <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center', flexWrap: 'wrap' }}>
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={() => setNewPatientDialog(true)}
+              size="large"
+            >
+              Add First Patient
+            </Button>
+            <Button
+              variant="outlined"
+              startIcon={<PersonIcon />}
+              onClick={async () => {
+                if (window.confirm('Generate demo data with 5 sample patients and assessments? This is great for testing and demos.')) {
+                  try {
+                    // Force EnhancedPatientService to use localStorage first
+                    EnhancedPatientService.switchToLocalStorage();
+                    // Generate the demo data
+                    const result = DemoDataGenerator.generateDemoData();
+                    console.log('Generated demo data:', result);
+                    // Wait a moment for localStorage to be written
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                    // Force reload from PatientService directly to bypass any caching
+                    const directPatients = await EnhancedPatientService.getPatientsWithAssessments();
+                    console.log('Direct load result:', directPatients.length, 'patients');
+                    // Update state
+                    setPatients(directPatients);
+                    setLoading(false);
+                    // Double-check after a brief delay
+                    setTimeout(async () => {
+                      const verifyPatients = await EnhancedPatientService.getPatientsWithAssessments();
+                      if (verifyPatients.length > 0 && patients.length === 0) {
+                        setPatients(verifyPatients);
+                      }
+                    }, 200);
+                  } catch (error) {
+                    console.error('Error generating demo data:', error);
+                    alert('Error generating demo data. Please refresh the page.');
+                  }
+                }
+              }}
+              size="large"
+              color="secondary"
+            >
+              Generate Demo Data
+            </Button>
+          </Box>
         </Box>
       )}
     </Box>
