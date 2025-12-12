@@ -542,9 +542,11 @@ const AssessmentCard: React.FC<AssessmentCardProps> = ({
 
       {/* Clinical Notes */}
       <Paper sx={{ p: 3, mt: 3 }}>
-        <Typography variant="h5" gutterBottom>
-          Clinical Notes
-        </Typography>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+          <Typography variant="h5">
+            Clinical Notes
+          </Typography>
+        </Box>
         <TextField
           fullWidth
           multiline
@@ -558,19 +560,17 @@ const AssessmentCard: React.FC<AssessmentCardProps> = ({
       </Paper>
 
       {/* AI Report Generator */}
-      {isAssessmentComplete && (
-        <AIReportGenerator
-          assessmentData={{
-            id: currentAssessmentId || 'temp',
-            patientId: selectedPatient?.id || 'temp',
-            patientInfo,
-            selectedGrades,
-            notes,
-            savedDate: new Date().toISOString()
-          }}
-          disabled={false}
-        />
-      )}
+      <AIReportGenerator
+        assessmentData={{
+          id: currentAssessmentId || 'temp',
+          patientId: selectedPatient?.id || 'temp',
+          patientInfo,
+          selectedGrades,
+          notes,
+          savedDate: new Date().toISOString()
+        }}
+        disabled={false}
+      />
     </div>
   );
 };
