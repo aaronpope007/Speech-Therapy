@@ -20,6 +20,7 @@ import {
   DialogActions,
   IconButton,
   Tooltip,
+  TextField,
 } from '@mui/material';
 import {
   AutoAwesome as AIIcon,
@@ -84,6 +85,7 @@ const AIReportGenerator: React.FC<AIReportGeneratorProps> = ({
       return;
     }
 
+    console.log('Starting report generation...', { assessmentData, settings });
     setIsGenerating(true);
     setError(null);
     setReport(null);
@@ -96,15 +98,39 @@ const AIReportGenerator: React.FC<AIReportGeneratorProps> = ({
         tone: settings.tone,
       };
 
+      console.log('Calling geminiService.generateReport with request:', request);
       const generatedReport = await geminiService.generateReport(request);
-      setReport(generatedReport);
-      onReportGenerated?.(generatedReport);
+      console.log('Received report from service:', generatedReport);
+      
+      if (!generatedReport || !generatedReport.clinicalImpression) {
+        console.error('Report is missing clinicalImpression:', generatedReport);
+        setError('Report generated but clinical impression is missing. Check console for details.');
+        setReport(generatedReport); // Still set it so user can see what we got
+      } else {
+        setReport(generatedReport);
+        onReportGenerated?.(generatedReport);
+        console.log('Report successfully set in state');
+      }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to generate report');
+      console.error('Error in handleGenerateReport:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Failed to generate report';
+      setError(errorMessage);
+      
+      // If it's a model not found error, list available models
+      if (errorMessage.includes('not found') || errorMessage.includes('not supported')) {
+        console.log('Model error detected. Listing available models...');
+        await geminiService.listModels();
+      }
     } finally {
       setIsGenerating(false);
+      console.log('Report generation finished');
     }
   }, [assessmentData, settings, onReportGenerated]);
+
+  const handleListModels = useCallback(async () => {
+    console.log('Manually listing available models...');
+    await geminiService.listModels();
+  }, []);
 
   const handleCopyReport = async () => {
     if (!report) return;
@@ -174,6 +200,15 @@ DISCLAIMER: This report is AI-generated and should be reviewed by a qualified he
             AI Clinical Report Generator
           </Typography>
           <Box sx={{ display: 'flex', gap: 1 }}>
+            <Tooltip title="List Available Models (Check Console)">
+              <IconButton
+                size="small"
+                onClick={handleListModels}
+                disabled={isGenerating}
+              >
+                <InfoIcon />
+              </IconButton>
+            </Tooltip>
             <Tooltip title="Report Settings">
               <IconButton
                 size="small"
@@ -228,11 +263,29 @@ DISCLAIMER: This report is AI-generated and should be reviewed by a qualified he
               />
             </Box>
 
-            <Paper sx={{ p: 2, bgcolor: 'grey.50', mb: 2 }}>
-              <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap' }}>
-                {report.clinicalImpression}
-              </Typography>
-            </Paper>
+            <TextField
+              fullWidth
+              multiline
+              rows={12}
+              value={report.clinicalImpression || 'No clinical impression generated.'}
+              variant="outlined"
+              label="Clinical Report"
+              InputProps={{
+                readOnly: true,
+              }}
+              sx={{
+                mb: 2,
+                '& .MuiInputBase-root': {
+                  bgcolor: 'grey.50',
+                  fontFamily: 'monospace',
+                  fontSize: '0.9rem',
+                },
+                '& .MuiInputBase-input': {
+                  whiteSpace: 'pre-wrap',
+                  wordBreak: 'break-word',
+                },
+              }}
+            />
 
             <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
               <Button

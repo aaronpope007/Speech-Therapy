@@ -568,7 +568,7 @@ const AssessmentCard: React.FC<AssessmentCardProps> = ({
             notes,
             savedDate: new Date().toISOString()
           }}
-          disabled={!canSave}
+          disabled={false}
         />
       )}
     </div>

@@ -48,7 +48,7 @@ const GeminiAPITest: React.FC = () => {
     setTestResult(null);
 
     try {
-      const response = await geminiService['makeRequest'](testPrompt);
+      const response = await geminiService.testCustomPrompt(testPrompt);
       setTestResult(`✅ API Response:\n\n${response}`);
     } catch (err) {
       setError(`❌ Test failed: ${err instanceof Error ? err.message : 'Unknown error'}`);
